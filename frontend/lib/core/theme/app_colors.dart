@@ -24,4 +24,11 @@ class AppColors {
   // Border & Divider
   static const Color border = Color(0xFFE0E0E0);
   static const Color divider = Color(0xFFF0F0F0);
+
+  // Splash & Premium Palette
+  static const Color splashDark = Color(0xFF1A1512);
+  static const Color splashMid = Color(0xFF3B2F27);
+  static const Color splashGreen = Color(0xFF3E4E2E);
+  static const Color splashRed = Color(0xFF6F2608);
+  static const Color splashAccent = Color(0xFFD47A5B);
 }
