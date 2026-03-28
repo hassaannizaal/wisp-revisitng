@@ -40,13 +40,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: Color(0xFF0E081A),
+        surface: AppColors.scaffoldDark,
         error: AppColors.error,
       ),
-      scaffoldBackgroundColor: const Color(0xFF0E081A),
+      scaffoldBackgroundColor: AppColors.scaffoldDark,
       textTheme: GoogleFonts.outfitTextTheme().apply(
         bodyColor: Colors.white,
         displayColor: Colors.white,
