@@ -99,8 +99,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                   opacity: _logoAnimation,
                   child: SlideTransition(
                     position: _logoSlide,
-                    child: Center(
-                      child: const WispLogo(
+                    child: const Center(
+                      child: WispLogo(
                         fontSize: 42,
                         color: AppColors.splashTextDark,
                       ),
@@ -146,7 +146,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: 18,
-                          color: AppColors.splashTextDark.withOpacity(0.6),
+                          color: AppColors.splashTextDark.withValues(alpha: 0.6),
                           height: 1.5,
                           letterSpacing: 0.2,
                         ),
@@ -217,7 +217,7 @@ class _WelcomeBackground extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.splashPhase2.withOpacity(0.15),
+                        AppColors.splashPhase2.withValues(alpha: 0.15),
                         Colors.transparent,
                       ],
                     ),
@@ -255,10 +255,10 @@ class _GlassActionArea extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -296,7 +296,7 @@ class _GlassActionArea extends StatelessWidget {
                   child: Text(
                     'Already have an account? Log In',
                     style: GoogleFonts.outfit(
-                      color: AppColors.splashTextDark.withOpacity(0.8),
+                      color: AppColors.splashTextDark.withValues(alpha: 0.8),
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),

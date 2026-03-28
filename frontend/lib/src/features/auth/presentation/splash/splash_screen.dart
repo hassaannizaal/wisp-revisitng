@@ -65,11 +65,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    _startSplashing();
+    unawaited(_startSplashing());
   }
 
-  void _startSplashing() async {
-    _introController.forward();
+  Future<void> _startSplashing() async {
+    unawaited(_introController.forward());
     
     // Phase 0: Logo (3s)
     await Future.delayed(const Duration(seconds: 3));
@@ -89,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
-  void _nextPhase() async {
+  Future<void> _nextPhase() async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     setState(() => _phase = 2);
@@ -245,7 +245,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               Text(
                 'Aligning your mindful journey...',
                 style: GoogleFonts.outfit(
-                  color: contentColor.withOpacity(0.6),
+                  color: contentColor.withValues(alpha: 0.6),
                   fontSize: 16,
                   height: 1.5,
                   letterSpacing: 0.5,
@@ -262,7 +262,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                WispLogo(fontSize: 32, color: contentColor.withOpacity(0.8), showText: false),
+                WispLogo(fontSize: 32, color: contentColor.withValues(alpha: 0.8), showText: false),
                 const SizedBox(height: 56),
                 Text(
                   '“In the midst of winter, I found there was within me an invincible summer.”',
@@ -279,7 +279,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 Text(
                   '— ALBERT CAMUS',
                   style: GoogleFonts.outfit(
-                    color: contentColor.withOpacity(0.5),
+                    color: contentColor.withValues(alpha: 0.5),
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 3,
@@ -324,19 +324,19 @@ class _BokehBackground extends StatelessWidget {
                     top: -50 + (animation.value * 30),
                     left: -50 + (animation.value * 20),
                     size: 400,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                   _PositionedOrb(
                     bottom: 100 - (animation.value * 40),
                     right: -100 + (animation.value * 30),
                     size: 500,
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
                   _PositionedOrb(
                      top: 200 + (animation.value * 50),
                      right: 50,
                      size: 300,
-                     color: Colors.white.withOpacity(0.03),
+                     color: Colors.white.withValues(alpha: 0.03),
                   ),
                 ],
               );
@@ -454,7 +454,7 @@ class _PremiumProgress extends StatelessWidget {
       width: 240,
       height: 3,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
@@ -463,11 +463,11 @@ class _PremiumProgress extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             width: 240 * progress,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 0),
                 ),
