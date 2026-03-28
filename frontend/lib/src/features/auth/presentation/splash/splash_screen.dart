@@ -12,13 +12,19 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with TickerProviderStateMixin {
   int _phase = 0;
   double _progress = 0;
   late Timer _timer;
-  
-  // Animation controllers for circles
+
+  // Animation controllers for circles and intro
   late AnimationController _circleController;
+  late AnimationController _introController;
+  late Animation<double> _logoFade;
+  late Animation<double> _logoScale;
+  late Animation<double> _textFade;
+  late Animation<Offset> _textSlide;
 
   @override
   void initState() {
@@ -28,12 +34,44 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       duration: const Duration(seconds: 10),
     )..repeat();
 
+    _introController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _logoFade = CurvedAnimation(
+      parent: _introController,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    );
+
+    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _textFade = CurvedAnimation(
+      parent: _introController,
+      curve: const Interval(0.4, 0.9, curve: Curves.easeIn),
+    );
+
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOutQuint),
+      ),
+    );
+
     _startSplashing();
   }
 
   void _startSplashing() async {
+    // Start intro animation
+    _introController.forward();
+    
     // Phase 0: Logo (2s)
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
     setState(() => _phase = 1);
 
@@ -61,7 +99,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
-    
+
     // Check auth state and navigate (can be used for conditional logic)
     // final authState = ref.read(authStateChangesProvider);
     if (!mounted) return;
@@ -69,7 +107,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     // ignore: unawaited_futures
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -81,6 +120,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   @override
   void dispose() {
     _circleController.dispose();
+    _introController.dispose();
     if (mounted && _timer.isActive) _timer.cancel();
     super.dispose();
   }
@@ -96,7 +136,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
           children: [
             // Background Circles
             if (_phase > 0) ..._buildAnimatedCircles(),
-            
+
             // Content
             Center(
               child: AnimatedSwitcher(
@@ -112,11 +152,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   Color _getBackgroundColor() {
     switch (_phase) {
-      case 0: return AppColors.splashDark;
-      case 1: return AppColors.splashMid;
-      case 2: return AppColors.splashGreen;
-      case 3: return AppColors.splashRed;
-      default: return AppColors.splashDark;
+      case 0:
+        return AppColors.splashPhase0;
+      case 1:
+        return AppColors.splashPhase1;
+      case 2:
+        return AppColors.splashPhase2;
+      case 3:
+        return AppColors.splashPhase3;
+      default:
+        return AppColors.splashPhase0;
+    }
+  }
+
+  Color _getContentColor() {
+    // Phases 0 & 1 are dark; Phases 2 & 3 are light.
+    if (_phase <= 1) {
+      return Colors.white;
+    } else {
+      return AppColors.splashTextDark;
     }
   }
 
@@ -140,12 +194,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       if (_phase == 1)
         Center(
           child: Container(
-             width: 400,
-             height: 400,
-             decoration: const BoxDecoration(
-               shape: BoxShape.circle,
-               color: Color.fromRGBO(0, 0, 0, 0.1),
-             ),
+            width: 400,
+            height: 400,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color.fromRGBO(0, 0, 0, 0.1),
+            ),
           ),
         ),
     ];
@@ -154,34 +208,53 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   Widget _buildPhaseContent() {
     switch (_phase) {
       case 0:
-        return Column(
-          key: const ValueKey(0),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const WispLogo(size: 120),
-            const SizedBox(height: 24),
-            Text(
-              'WISP.ai',
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 42,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -1,
-              ),
-            ),
-          ],
+        final color = _getContentColor();
+        return AnimatedBuilder(
+          animation: _introController,
+          builder: (context, child) {
+            return Column(
+              key: const ValueKey(0),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FadeTransition(
+                  opacity: _logoFade,
+                  child: ScaleTransition(
+                    scale: _logoScale,
+                    child: const WispLogo(size: 120),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FadeTransition(
+                  opacity: _textFade,
+                  child: SlideTransition(
+                    position: _textSlide,
+                    child: Text(
+                      'WISP.ai',
+                      style: GoogleFonts.outfit(
+                        color: color,
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       case 1:
         return Text(
           key: const ValueKey(1),
           '${(_progress * 100).toInt()}%',
           style: GoogleFonts.outfit(
-            color: AppColors.splashAccent,
+            color: _getContentColor(),
             fontSize: 48,
             fontWeight: FontWeight.w500,
           ),
         );
       case 2:
+        final color = _getContentColor();
         return Column(
           key: const ValueKey(2),
           mainAxisSize: MainAxisSize.min,
@@ -189,35 +262,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
             Text(
               'Fetching Data...',
               style: GoogleFonts.outfit(
-                color: Colors.white,
+                color: color,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Shake your screen to interact!',
+              'Loading your personalized mental wellness journey...',
               style: GoogleFonts.outfit(
-                color: Colors.white70,
+                color: color.withOpacity(0.7),
                 fontSize: 16,
               ),
             ),
           ],
         );
       case 3:
+        final color = _getContentColor();
         return Container(
           key: const ValueKey(3),
-           padding: const EdgeInsets.symmetric(horizontal: 40),
-           child: Column(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               const WispLogo(size: 80, color: AppColors.splashAccent),
-               const SizedBox(height: 48),
-               Text(
+              WispLogo(size: 80, color: color),
+              const SizedBox(height: 48),
+              Text(
                 '“In the midst of winter, I found there was within me an invincible summer.”',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: color,
                   fontSize: 24,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
@@ -227,7 +301,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
               Text(
                 '— ALBERT CAMUS',
                 style: GoogleFonts.outfit(
-                  color: Colors.white54,
+                  color: color.withOpacity(0.5),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
@@ -257,12 +331,11 @@ class WispLogo extends StatelessWidget {
         fit: BoxFit.contain,
         // If color is provided, we can use it to tint the logo if needed
         // but for now let's use the original logo colors.
-        color: color, 
+        color: color,
       ),
     );
   }
 }
-
 
 class _PositionedCircle extends StatelessWidget {
   final double? top, bottom, left, right;

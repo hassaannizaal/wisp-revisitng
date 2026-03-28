@@ -31,4 +31,11 @@ class AppColors {
   static const Color splashGreen = Color(0xFF3E4E2E);
   static const Color splashRed = Color(0xFF6F2608);
   static const Color splashAccent = Color(0xFFD47A5B);
+
+  // New Purple Theme Splash Colors
+  static const Color splashPhase0 = Color(0xFF2D1B4E); // Deep Purple
+  static const Color splashPhase1 = Color(0xFF827397); // Muted Lavender
+  static const Color splashPhase2 = Color(0xFFE9B384); // Warm Peach
+  static const Color splashPhase3 = Color(0xFFFEF5ED); // Soft Gold/Beige
+  static const Color splashTextDark = Color(0xFF1A0F2E); // Deep Charcoal Purple
 }
