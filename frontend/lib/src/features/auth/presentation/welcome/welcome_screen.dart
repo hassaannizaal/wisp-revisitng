@@ -20,7 +20,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   late Animation<double> _logoAnimation;
   late Animation<double> _headlineAnimation;
   late Animation<double> _subheadlineAnimation;
-  late Animation<double> _actionAreaAnimation;
 
   @override
   void initState() {
@@ -53,10 +52,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       curve: const Interval(0.35, 0.8, curve: curve),
     );
 
-    _actionAreaAnimation = CurvedAnimation(
-      parent: _mainController,
-      curve: const Interval(0.55, 1.0, curve: curve),
-    );
 
     _mainController.forward();
   }
@@ -137,15 +132,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                 const Spacer(flex: 4),
 
                 // Item 4: Luxury Action Area (Glassmorphism)
-                _StaggeredTransition(
-                  animation: _actionAreaAnimation,
-                  child: _LuxuryGlassActionArea(
-                    onGetStarted: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                    ),
-                    onLogin: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    ),
+                _LuxuryGlassActionArea(
+                  onGetStarted: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                  ),
+                  onLogin: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
                   ),
                 ),
                 
@@ -257,19 +249,19 @@ class _LuxuryGlassActionArea extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withValues(alpha: 0.5),
-              Colors.white.withValues(alpha: 0.08),
+              Colors.white.withValues(alpha: 0.12), // Darkened to stop the white flash
+              Colors.white.withValues(alpha: 0.02),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: Colors.black.withValues(alpha: 0.5), // Deeper shadow
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(1.5), // The Border Width
+        padding: const EdgeInsets.all(1.5),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30.5),
           child: BackdropFilter(
@@ -277,13 +269,13 @@ class _LuxuryGlassActionArea extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A2E).withValues(alpha: 0.12),
+                // Use the Scaffold's deep purple to guarantee a dark render
+                color: const Color(0xFF0E081A).withValues(alpha: 0.45), 
                 borderRadius: BorderRadius.circular(30.5),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Luxury Translucent Button
                   Container(
                     width: double.infinity,
                     height: 64,
@@ -291,21 +283,14 @@ class _LuxuryGlassActionArea extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withValues(alpha: 0.25), // Higher density
-                          Colors.white.withValues(alpha: 0.1),
+                          Colors.white.withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: 0.05),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: Colors.white.withValues(alpha: 0.15),
                         width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.05),
-                          blurRadius: 15,
-                          spreadRadius: 1,
-                        ),
-                      ],
                     ),
                     child: ElevatedButton(
                       onPressed: onGetStarted,

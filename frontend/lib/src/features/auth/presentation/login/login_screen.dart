@@ -26,7 +26,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   // Staggered Animations
   late Animation<double> _logoAnimation;
   late Animation<double> _headlineAnimation;
-  late Animation<double> _cardAnimation;
   late Animation<double> _primaryButtonAnimation;
   late Animation<double> _socialAnimation;
 
@@ -56,10 +55,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
       curve: const Interval(0.15, 0.55, curve: curve),
     );
 
-    _cardAnimation = CurvedAnimation(
-      parent: _mainController,
-      curve: const Interval(0.3, 0.7, curve: curve),
-    );
 
     _primaryButtonAnimation = CurvedAnimation(
       parent: _mainController,
@@ -141,43 +136,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                     const SizedBox(height: 48),
 
                     // Item 3: Luxury Glass Card
-                    _LuxuryStaggered(
-                      animation: _cardAnimation,
-                      child: _LuxuryGlassCard(
-                        child: Column(
-                          children: [
-                            _LuxuryTextField(
-                              controller: _emailController,
-                              label: 'EMAIL ADDRESS',
-                              hintText: 'Enter your email',
-                              prefixIcon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                            const SizedBox(height: 32), // Extra breathing room
-                            _LuxuryTextField(
-                              controller: _passwordController,
-                              label: 'PASSWORD',
-                              hintText: 'Enter your password',
-                              prefixIcon: Icons.lock_outline,
-                              isPassword: true,
-                            ),
-                            const SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {},
-                                child: Text(
-                                  'Forgot Password?',
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 13,
-                                  ),
+                    _LuxuryGlassCard(
+                      child: Column(
+                        children: [
+                          _LuxuryTextField(
+                            controller: _emailController,
+                            label: 'EMAIL ADDRESS',
+                            hintText: 'Enter your email',
+                            prefixIcon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 32), // Extra breathing room
+                          _LuxuryTextField(
+                            controller: _passwordController,
+                            label: 'PASSWORD',
+                            hintText: 'Enter your password',
+                            prefixIcon: Icons.lock_outline,
+                            isPassword: true,
+                          ),
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'Forgot Password?',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 13,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -370,32 +362,31 @@ class _LuxuryGlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: 0.4), // Darker shadow
             blurRadius: 40,
             spreadRadius: 5,
             offset: const Offset(0, 20),
           ),
         ],
-        // The Intensified Shimmering Edge-light (Higher Contrast)
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.5),
-            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.12), // Darkened to stop the white flash
+            Colors.white.withValues(alpha: 0.02),
           ],
         ),
       ),
-      padding: const EdgeInsets.all(1.5), // The Border Width
+      padding: const EdgeInsets.all(1.5), 
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28.5), // Slightly smaller to match outer radius
+        borderRadius: BorderRadius.circular(28.5), 
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45), // Doubled depth for "Elite Frost"
+          filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45), 
           child: Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              // Slightly higher opacity + subtle dark tint for grounding
-              color: const Color(0xFF1A1A2E).withValues(alpha: 0.12),
+              // Match the deep purple background to force a dark render
+              color: const Color(0xFF0E081A).withValues(alpha: 0.45),
               borderRadius: BorderRadius.circular(28.5),
             ),
             child: child,
@@ -404,8 +395,6 @@ class _LuxuryGlassCard extends StatelessWidget {
       ),
     );
   }
-
-
 }
 
 class _LuxuryTextField extends StatefulWidget {
