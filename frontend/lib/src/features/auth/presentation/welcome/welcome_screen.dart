@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../login/login_screen.dart';
 import '../signup/signup_screen.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
@@ -15,7 +14,7 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   late AnimationController _mainController;
-  late AnimationController _bgAnimationController;
+  late AnimationController _auraController;
 
   // Staggered Animations
   late Animation<double> _logoAnimation;
@@ -23,52 +22,41 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   late Animation<double> _subheadlineAnimation;
   late Animation<double> _actionAreaAnimation;
 
-  // Slide Animations
-  late Animation<Offset> _logoSlide;
-  late Animation<Offset> _headlineSlide;
-  late Animation<Offset> _subheadlineSlide;
-  late Animation<Offset> _actionAreaSlide;
-
   @override
   void initState() {
     super.initState();
 
     _mainController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    _bgAnimationController = AnimationController(
+    _auraController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
     )..repeat();
 
-    // Intervals for staggered effect
-    const curve = Curves.easeOutQuart;
+    const curve = Curves.fastOutSlowIn;
 
     _logoAnimation = CurvedAnimation(
       parent: _mainController,
-      curve: const Interval(0.0, 0.5, curve: curve),
+      curve: const Interval(0.0, 0.45, curve: curve),
     );
-    _logoSlide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(_logoAnimation);
 
     _headlineAnimation = CurvedAnimation(
       parent: _mainController,
-      curve: const Interval(0.2, 0.7, curve: curve),
+      curve: const Interval(0.2, 0.65, curve: curve),
     );
-    _headlineSlide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(_headlineAnimation);
 
     _subheadlineAnimation = CurvedAnimation(
       parent: _mainController,
-      curve: const Interval(0.4, 0.9, curve: curve),
+      curve: const Interval(0.35, 0.8, curve: curve),
     );
-    _subheadlineSlide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(_subheadlineAnimation);
 
     _actionAreaAnimation = CurvedAnimation(
       parent: _mainController,
-      curve: const Interval(0.6, 1.0, curve: curve),
+      curve: const Interval(0.55, 1.0, curve: curve),
     );
-    _actionAreaSlide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(_actionAreaAnimation);
 
     _mainController.forward();
   }
@@ -76,104 +64,92 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void dispose() {
     _mainController.dispose();
-    _bgAnimationController.dispose();
+    _auraController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0E081A), // Luxury Deep Rich Purple
       body: Stack(
         children: [
-          // 1. Background (Continuous Depth)
-          _WelcomeBackground(animation: _bgAnimationController),
+          // 1. Aura Background (Shared Environment)
+          _AuraBackground(animation: _auraController),
 
           // 2. Main Content
           SafeArea(
             child: Column(
               children: [
-                const Spacer(flex: 2),
+                const Spacer(flex: 3),
                 
-                // Item 1: Logo
-                FadeTransition(
-                  opacity: _logoAnimation,
-                  child: SlideTransition(
-                    position: _logoSlide,
-                    child: const Center(
-                      child: WispLogo(
-                        fontSize: 42,
-                        color: AppColors.splashTextDark,
-                      ),
+                // Item 1: Wisp Logo
+                _StaggeredTransition(
+                  animation: _logoAnimation,
+                  child: const Center(
+                    child: WispLogo(
+                      fontSize: 48, // Prominent branding
+                      color: Colors.white,
                     ),
                   ),
                 ),
 
-                const Spacer(),
+                const Spacer(flex: 2),
 
                 // Item 2: Headline
-                FadeTransition(
-                  opacity: _headlineAnimation,
-                  child: SlideTransition(
-                    position: _headlineSlide,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        'Your Space to Breathe',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.splashTextDark,
-                          height: 1.1,
-                          letterSpacing: -0.5,
+                _StaggeredTransition(
+                  animation: _headlineAnimation,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Your Space to Breathe',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w300, // Elegant thin weight
+                            color: Colors.white,
+                            height: 1.1,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        // Item 3: Subheadline
+                        _StaggeredTransition(
+                          animation: _subheadlineAnimation,
+                          child: Text(
+                            'A specialized mental wellness journey designed uniquely for you.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              height: 1.5,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const Spacer(flex: 4),
 
-                // Item 3: Subheadline
-                FadeTransition(
-                  opacity: _subheadlineAnimation,
-                  child: SlideTransition(
-                    position: _subheadlineSlide,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 50),
-                      child: Text(
-                        'A specialized mental wellness journey designed uniquely for you.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          color: AppColors.splashTextDark.withValues(alpha: 0.6),
-                          height: 1.5,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
+                // Item 4: Luxury Action Area (Glassmorphism)
+                _StaggeredTransition(
+                  animation: _actionAreaAnimation,
+                  child: _LuxuryGlassActionArea(
+                    onGetStarted: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
                     ),
-                  ),
-                ),
-
-                const Spacer(flex: 3),
-
-                // Item 4: Action Area (Glassmorphism)
-                FadeTransition(
-                  opacity: _actionAreaAnimation,
-                  child: SlideTransition(
-                    position: _actionAreaSlide,
-                    child: _GlassActionArea(
-                      onGetStarted: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                      ),
-                      onLogin: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      ),
+                    onLogin: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -183,126 +159,189 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   }
 }
 
-class _WelcomeBackground extends StatelessWidget {
+class _AuraBackground extends StatelessWidget {
   final Animation<double> animation;
-  const _WelcomeBackground({required this.animation});
+  const _AuraBackground({required this.animation});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.splashPhase3,
-                AppColors.splashPhase2,
-                AppColors.splashPhase3,
-              ],
+        return Stack(
+          children: [
+            // Shared Orbs with Login Screen (Continuous Room feel)
+            Positioned(
+              top: -100 + (animation.value * 60),
+              left: -150 + (animation.value * 100),
+              child: _AuraOrb(
+                size: 600,
+                color: const Color(0xFF6B5B95).withValues(alpha: 0.15),
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              // Subtle breathing orb
-              Positioned(
-                top: 100 + (animation.value * 50),
-                right: -50 + (animation.value * 30),
-                child: Container(
-                  width: 400,
-                  height: 400,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.splashPhase2.withValues(alpha: 0.15),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
+            Positioned(
+              bottom: 100 + (animation.value * 80),
+              right: -200 + (animation.value * 120),
+              child: _AuraOrb(
+                size: 700,
+                color: const Color(0xFFE9B384).withValues(alpha: 0.1),
               ),
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                  child: Container(color: Colors.transparent),
-                ),
+            ),
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+                child: Container(color: Colors.transparent),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-class _GlassActionArea extends StatelessWidget {
+class _AuraOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  const _AuraOrb({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [color, Colors.transparent],
+        ),
+      ),
+    );
+  }
+}
+
+class _StaggeredTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+  const _StaggeredTransition({required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _LuxuryGlassActionArea extends StatelessWidget {
   final VoidCallback onGetStarted;
   final VoidCallback onLogin;
 
-  const _GlassActionArea({required this.onGetStarted, required this.onLogin});
+  const _LuxuryGlassActionArea({required this.onGetStarted, required this.onLogin});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.5),
+              Colors.white.withValues(alpha: 0.08),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 40,
+              offset: const Offset(0, 20),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Primary Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 60,
-                  child: ElevatedButton(
-                    onPressed: onGetStarted,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.splashPhase0,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+          ],
+        ),
+        padding: const EdgeInsets.all(1.5), // The Border Width
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30.5),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+            child: Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A2E).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(30.5),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Luxury Translucent Button
+                  Container(
+                    width: double.infinity,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.25), // Higher density
+                          Colors.white.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          blurRadius: 15,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: onGetStarted,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Text(
+                        'Get Started',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: onLogin,
                     child: Text(
-                      'Get Started',
+                      'LOG IN',
                       style: GoogleFonts.outfit(
-                        fontSize: 18,
+                        color: Colors.white,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                        letterSpacing: 3,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                // Secondary Button
-                TextButton(
-                  onPressed: onLogin,
-                  child: Text(
-                    'Already have an account? Log In',
-                    style: GoogleFonts.outfit(
-                      color: AppColors.splashTextDark.withValues(alpha: 0.8),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

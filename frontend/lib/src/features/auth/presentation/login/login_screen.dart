@@ -376,13 +376,13 @@ class _LuxuryGlassCard extends StatelessWidget {
             offset: const Offset(0, 20),
           ),
         ],
-        // The Shimmering Edge-light Gradient Border
+        // The Intensified Shimmering Edge-light (Higher Contrast)
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.4),
-            Colors.white.withValues(alpha: 0.05),
+            Colors.white.withValues(alpha: 0.5),
+            Colors.white.withValues(alpha: 0.08),
           ],
         ),
       ),
@@ -390,11 +390,12 @@ class _LuxuryGlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28.5), // Slightly smaller to match outer radius
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45), // Doubled depth for "Elite Frost"
           child: Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              // Slightly higher opacity + subtle dark tint for grounding
+              color: const Color(0xFF1A1A2E).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(28.5),
             ),
             child: child,
@@ -458,29 +459,33 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
           ),
           cursorColor: Colors.white,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.03),
             hintText: widget.hintText,
             hintStyle: GoogleFonts.outfit(
               color: Colors.white.withValues(alpha: 0.3),
               fontWeight: FontWeight.w300,
             ),
-            prefixIcon: Icon(widget.prefixIcon, color: Colors.white.withValues(alpha: 0.5), size: 20),
+            prefixIcon: Icon(widget.prefixIcon, color: Colors.white.withValues(alpha: 0.5), size: 18),
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      size: 18,
+                      size: 16,
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
                     onPressed: () => setState(() => _obscureText = !_obscureText),
                   )
                 : null,
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 1.0),
             ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white, width: 1.5),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1.0),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 20),
+            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           ),
         ),
       ],
