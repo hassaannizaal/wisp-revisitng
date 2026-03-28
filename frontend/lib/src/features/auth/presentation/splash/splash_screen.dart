@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/wisp_logo.dart';
 import '../welcome/welcome_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -182,7 +183,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   opacity: _logoFade,
                   child: ScaleTransition(
                     scale: _logoScale,
-                    child: const WispLogo(size: 140),
+                    child: const WispLogo(fontSize: 64, showText: false),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -261,7 +262,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                WispLogo(size: 60, color: contentColor.withOpacity(0.8)),
+                WispLogo(fontSize: 32, color: contentColor.withOpacity(0.8), showText: false),
                 const SizedBox(height: 56),
                 Text(
                   '“In the midst of winter, I found there was within me an invincible summer.”',
@@ -479,21 +480,4 @@ class _PremiumProgress extends StatelessWidget {
   }
 }
 
-class WispLogo extends StatelessWidget {
-  final double size;
-  final Color? color;
-  const WispLogo({super.key, required this.size, this.color});
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Image.asset(
-        'assets/images/wisp_logo.png',
-        fit: BoxFit.contain,
-        color: color,
-      ),
-    );
-  }
-}

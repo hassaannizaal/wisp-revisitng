@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../login/login_screen.dart';
 import '../signup/signup_screen.dart';
+import '../../../../../core/widgets/wisp_logo.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -99,11 +100,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                   child: SlideTransition(
                     position: _logoSlide,
                     child: Center(
-                      child: Image.asset(
-                        'assets/images/wisp_logo.png',
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.contain,
+                      child: const WispLogo(
+                        fontSize: 42,
+                        color: AppColors.splashTextDark,
                       ),
                     ),
                   ),
