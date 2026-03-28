@@ -13,6 +13,7 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
   riverpod_annotation: ^2.3.5
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,4 @@ flutter:
 
   assets:
     - assets/images/wisp_logo.png
+    - assets/sounds/startsound_vGPe9df7.wav

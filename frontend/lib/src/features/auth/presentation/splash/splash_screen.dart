@@ -1,11 +1,13 @@
- import 'dart:async';
- import 'dart:math';
- import 'dart:ui';
- import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:math';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
+import '../../../../../core/services/audio_service.dart';
 import '../welcome/welcome_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -17,36 +19,37 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-   int _phase = 0;
-   double _progress = 0;
-   late Timer _timer;
-   late String _selectedQuote;
- 
-   static const List<String> _wellnessQuotes = [
-     "You don't have to be okay all the time.",
-     "Rest is not giving up.",
-     "Healing is not linear.",
-     "Still here. Still trying. That counts.",
-     "Surviving is enough.",
-     "Small steps are still movement.",
-     "This moment will pass.",
-     "You've survived every hard day so far.",
-     "Right now is enough.",
-     "Be gentle with yourself.",
-     "You deserve your own kindness.",
-     "Progress, not perfection.",
-     "Breathe. You are still here.",
-     "Pause. You are allowed to pause.",
-     "One breath at a time.",
-     "The night always ends.",
-     "Low days are not lost days.",
-     "Darkness is not the destination.",
-     "You are not your worst thought.",
-     "You are not your diagnosis.",
-     "You are more than this moment.",
-   ];
- 
-   // Animation controllers for circles and intro
+  int _phase = 0;
+  double _progress = 0;
+  late Timer _timer;
+  late String _selectedQuote;
+  bool _hasInteracted = false;
+  final Completer<void> _interactionCompleter = Completer<void>();
+
+  static const List<String> _wellnessQuotes = [
+    "You don't have to be okay all the time",
+    "Healing is not linear",
+    "Still here. Still trying. That counts",
+    "Surviving is enough",
+    "Small steps are still movement",
+    "This moment will pass",
+    "You've survived every hard day so far",
+    "Right now is enough",
+    "Be gentle with yourself",
+    "You deserve your own kindness",
+    "Progress, not perfection",
+    "Breathe. You are still here",
+    "Pause. You are allowed to pause",
+    "One breath at a time",
+    "The night always ends",
+    "Low days are not lost days",
+    "Darkness is not the destination",
+    "You are not your worst thought",
+    "You are not your diagnosis",
+    "You are more than this moment",
+  ];
+
+  // Animation controllers for circles and intro
   late AnimationController _circleController;
   late AnimationController _introController;
   late Animation<double> _logoFade;
@@ -54,14 +57,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late Animation<double> _textFade;
   late Animation<Offset> _textSlide;
 
-   @override
-   void initState() {
-     super.initState();
-     
-     // Select a random wellness quote
-     _selectedQuote = _wellnessQuotes[Random().nextInt(_wellnessQuotes.length)];
- 
-     _circleController = AnimationController(
+  @override
+  void initState() {
+    super.initState();
+
+    // Select a random wellness quote
+    _selectedQuote = _wellnessQuotes[Random().nextInt(_wellnessQuotes.length)];
+
+    _circleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
     )..repeat();
@@ -88,7 +91,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: const Interval(0.4, 0.9, curve: Curves.easeIn),
     );
 
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+    _textSlide =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _introController,
         curve: const Interval(0.4, 1.0, curve: Curves.easeOutQuart),
@@ -100,7 +104,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _startSplashing() async {
     unawaited(_introController.forward());
-    
+
+    // Web Autoplay Compliance: Wait for first gesture before sound & phase 1
+    if (kIsWeb && !_hasInteracted) {
+      await _interactionCompleter.future;
+    }
+
+    unawaited(AudioService().playLogoSound());
+
     // Phase 0: Logo (3s)
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
@@ -175,32 +186,43 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background Gradient and Bokeh
-          _BokehBackground(
-            phase: _phase,
-            animation: _circleController,
-            backgroundColor: _getBackgroundColor(),
-          ),
-          
-          // Content
-          Center(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 1000),
-              switchInCurve: Curves.easeInOutCubic,
-              switchOutCurve: Curves.easeInOutCubic,
-              child: _buildPhaseContent(),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (!_hasInteracted) {
+            setState(() => _hasInteracted = true);
+            if (!_interactionCompleter.isCompleted) {
+              _interactionCompleter.complete();
+            }
+          }
+        },
+        child: Stack(
+          children: [
+            // Background Gradient and Bokeh
+            _BokehBackground(
+              phase: _phase,
+              animation: _circleController,
+              backgroundColor: _getBackgroundColor(),
             ),
-          ),
-        ],
+
+            // Content
+            Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 1000),
+                switchInCurve: Curves.easeInOutCubic,
+                switchOutCurve: Curves.easeInOutCubic,
+                child: _buildPhaseContent(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPhaseContent() {
     final contentColor = _getContentColor();
-    
+
     switch (_phase) {
       case 0:
         return AnimatedBuilder(
@@ -233,6 +255,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                   ),
                 ),
+                if (kIsWeb && !_hasInteracted)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 100),
+                    child: _InteractionPrompt(animation: _introController),
+                  ),
               ],
             );
           },
@@ -293,20 +320,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                WispLogo(fontSize: 32, color: contentColor.withValues(alpha: 0.8), showText: false),
+                WispLogo(
+                    fontSize: 32,
+                    color: contentColor.withValues(alpha: 0.8),
+                    showText: false),
                 const SizedBox(height: 56),
-                 Text(
-                   '“$_selectedQuote”',
-                   textAlign: TextAlign.center,
-                   style: GoogleFonts.outfit(
-                     color: contentColor,
-                     fontSize: 26,
-                     fontWeight: FontWeight.w300, // Thinner for a more airy feel
-                     height: 1.6,
-                     fontStyle: FontStyle.italic,
-                   ),
-                 ),
-                 const SizedBox(height: 48), // Bottom padding
+                Text(
+                  _selectedQuote,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: contentColor,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w300, // Thinner for a more airy feel
+                    height: 1.6,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 48), // Bottom padding
               ],
             ),
           ),
@@ -340,9 +370,9 @@ class _BokehBackground extends StatelessWidget {
           AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
-               return Stack(
+              return Stack(
                 children: [
-                   _PositionedOrb(
+                  _PositionedOrb(
                     top: -50 + (animation.value * 30),
                     left: -50 + (animation.value * 20),
                     size: 400,
@@ -357,16 +387,16 @@ class _BokehBackground extends StatelessWidget {
                     color: const Color(0xFFE9B384).withValues(alpha: 0.08),
                   ),
                   _PositionedOrb(
-                     top: 200 + (animation.value * 50),
-                     right: 50,
-                     size: 300,
-                     color: Colors.white.withValues(alpha: 0.03),
+                    top: 200 + (animation.value * 50),
+                    right: 50,
+                    size: 300,
+                    color: Colors.white.withValues(alpha: 0.03),
                   ),
                 ],
               );
             },
           ),
-          
+
           // Blur Layer for Bokeh effect
           Positioned.fill(
             child: BackdropFilter(
@@ -421,7 +451,8 @@ class _PhaseTransition extends StatefulWidget {
   State<_PhaseTransition> createState() => _PhaseTransitionState();
 }
 
-class _PhaseTransitionState extends State<_PhaseTransition> with SingleTickerProviderStateMixin {
+class _PhaseTransitionState extends State<_PhaseTransition>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
   late Animation<Offset> _slide;
@@ -430,8 +461,8 @@ class _PhaseTransitionState extends State<_PhaseTransition> with SingleTickerPro
   void initState() {
     super.initState();
     _controller = AnimationController(
-       vsync: this,
-       duration: const Duration(milliseconds: 1200),
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
     );
 
     _fade = CurvedAnimation(
@@ -439,7 +470,8 @@ class _PhaseTransitionState extends State<_PhaseTransition> with SingleTickerPro
       curve: Curves.easeIn,
     );
 
-    _slide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
+    _slide =
+        Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOutQuart,
@@ -504,4 +536,33 @@ class _PremiumProgress extends StatelessWidget {
   }
 }
 
+class _InteractionPrompt extends StatelessWidget {
+  final Animation<double> animation;
+  const _InteractionPrompt({required this.animation});
 
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: animation,
+        curve: const Interval(0.6, 1.0, curve: Curves.easeIn),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.touch_app_outlined, color: Colors.white54, size: 24),
+          const SizedBox(height: 12),
+          Text(
+            'TAP TO BEGIN YOUR JOURNEY',
+            style: GoogleFonts.outfit(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
