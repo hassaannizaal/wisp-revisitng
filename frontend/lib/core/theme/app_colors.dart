@@ -35,7 +35,7 @@ class AppColors {
   // New Purple Theme Splash Colors
   static const Color splashPhase0 = Color(0xFF2D1B4E); // Deep Purple
   static const Color splashPhase1 = Color(0xFF827397); // Muted Lavender
-  static const Color splashPhase2 = Color(0xFFE9B384); // Warm Peach
-  static const Color splashPhase3 = Color(0xFFFEF5ED); // Soft Gold/Beige
+  static const Color splashPhase2 = Color(0xFF9E8CB2); // Dusty Mauve
+  static const Color splashPhase3 = Color(0xFFEBE9F0); // Lavender Mist
   static const Color splashTextDark = Color(0xFF1A0F2E); // Deep Charcoal Purple
 }
