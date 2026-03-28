@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,7 +32,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     super.initState();
     _circleController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 20),
     )..repeat();
 
     _introController = AnimationController(
@@ -44,7 +45,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
     );
 
-    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+    _logoScale = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(
         parent: _introController,
         curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
@@ -56,10 +57,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: const Interval(0.4, 0.9, curve: Curves.easeIn),
     );
 
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _introController,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeOutQuint),
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOutQuart),
       ),
     );
 
@@ -67,10 +68,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _startSplashing() async {
-    // Start intro animation
     _introController.forward();
     
-    // Phase 0: Logo (2s)
+    // Phase 0: Logo (3s)
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
     setState(() => _phase = 1);
@@ -91,17 +91,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _nextPhase() async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
-    setState(() => _phase = 2); // Fetching Data
+    setState(() => _phase = 2);
 
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    setState(() => _phase = 3); // Quote
+    setState(() => _phase = 3);
 
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-
-    // Check auth state and navigate (can be used for conditional logic)
-    // final authState = ref.read(authStateChangesProvider);
+    await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
     // ignore: unawaited_futures
@@ -112,7 +108,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 800),
+        transitionDuration: const Duration(milliseconds: 1000),
       ),
     );
   }
@@ -123,31 +119,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _introController.dispose();
     if (mounted && _timer.isActive) _timer.cancel();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOut,
-        color: _getBackgroundColor(),
-        child: Stack(
-          children: [
-            // Background Circles
-            if (_phase > 0) ..._buildAnimatedCircles(),
-
-            // Content
-            Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                child: _buildPhaseContent(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Color _getBackgroundColor() {
@@ -166,64 +137,55 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Color _getContentColor() {
-    // Phases 0 & 1 are dark; Phases 2 & 3 are light.
-    if (_phase <= 1) {
-      return Colors.white;
-    } else {
-      return AppColors.splashTextDark;
-    }
+    return _phase <= 1 ? Colors.white : AppColors.splashTextDark;
   }
 
-  List<Widget> _buildAnimatedCircles() {
-    return [
-      _PositionedCircle(
-        top: -100,
-        left: -100,
-        size: 300,
-        color: const Color.fromRGBO(255, 255, 255, 0.05),
-        animation: _circleController,
-      ),
-      _PositionedCircle(
-        bottom: -50,
-        right: -50,
-        size: 250,
-        color: const Color.fromRGBO(255, 255, 255, 0.03),
-        animation: _circleController,
-        reverse: true,
-      ),
-      if (_phase == 1)
-        Center(
-          child: Container(
-            width: 400,
-            height: 400,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color.fromRGBO(0, 0, 0, 0.1),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background Gradient and Bokeh
+          _BokehBackground(
+            phase: _phase,
+            animation: _circleController,
+            backgroundColor: _getBackgroundColor(),
+          ),
+          
+          // Content
+          Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 1000),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              child: _buildPhaseContent(),
             ),
           ),
-        ),
-    ];
+        ],
+      ),
+    );
   }
 
   Widget _buildPhaseContent() {
+    final contentColor = _getContentColor();
+    
     switch (_phase) {
       case 0:
-        final color = _getContentColor();
         return AnimatedBuilder(
+          key: const ValueKey(0),
           animation: _introController,
           builder: (context, child) {
             return Column(
-              key: const ValueKey(0),
               mainAxisSize: MainAxisSize.min,
               children: [
                 FadeTransition(
                   opacity: _logoFade,
                   child: ScaleTransition(
                     scale: _logoScale,
-                    child: const WispLogo(size: 120),
+                    child: const WispLogo(size: 140),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 FadeTransition(
                   opacity: _textFade,
                   child: SlideTransition(
@@ -231,10 +193,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Text(
                       'WISP.ai',
                       style: GoogleFonts.outfit(
-                        color: color,
-                        fontSize: 42,
+                        color: contentColor,
+                        fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: -1,
+                        letterSpacing: 4,
                       ),
                     ),
                   ),
@@ -244,75 +206,276 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           },
         );
       case 1:
-        return Text(
+        return _PhaseTransition(
           key: const ValueKey(1),
-          '${(_progress * 100).toInt()}%',
-          style: GoogleFonts.outfit(
-            color: _getContentColor(),
-            fontSize: 48,
-            fontWeight: FontWeight.w500,
-          ),
-        );
-      case 2:
-        final color = _getContentColor();
-        return Column(
-          key: const ValueKey(2),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Fetching Data...',
-              style: GoogleFonts.outfit(
-                color: color,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Loading your personalized mental wellness journey...',
-              style: GoogleFonts.outfit(
-                color: color.withOpacity(0.7),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        );
-      case 3:
-        final color = _getContentColor();
-        return Container(
-          key: const ValueKey(3),
-          padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              WispLogo(size: 80, color: color),
-              const SizedBox(height: 48),
               Text(
-                '“In the midst of winter, I found there was within me an invincible summer.”',
-                textAlign: TextAlign.center,
+                '${(_progress * 100).toInt()}%',
                 style: GoogleFonts.outfit(
-                  color: color,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                  height: 1.4,
+                  color: contentColor,
+                  fontSize: 64,
+                  fontWeight: FontWeight.w200,
+                  letterSpacing: -2,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
+              _PremiumProgress(progress: _progress, color: contentColor),
+            ],
+          ),
+        );
+      case 2:
+        return _PhaseTransition(
+          key: const ValueKey(2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Text(
-                '— ALBERT CAMUS',
+                'Fetching Data...',
                 style: GoogleFonts.outfit(
-                  color: color.withOpacity(0.5),
-                  fontSize: 14,
+                  color: contentColor,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Aligning your mindful journey...',
+                style: GoogleFonts.outfit(
+                  color: contentColor.withOpacity(0.6),
+                  fontSize: 16,
+                  height: 1.5,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],
           ),
         );
+      case 3:
+        return _PhaseTransition(
+          key: const ValueKey(3),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 48),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                WispLogo(size: 60, color: contentColor.withOpacity(0.8)),
+                const SizedBox(height: 56),
+                Text(
+                  '“In the midst of winter, I found there was within me an invincible summer.”',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: contentColor,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w500,
+                    height: 1.6,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  '— ALBERT CAMUS',
+                  style: GoogleFonts.outfit(
+                    color: contentColor.withOpacity(0.5),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       default:
         return const SizedBox.shrink();
     }
+  }
+}
+
+class _BokehBackground extends StatelessWidget {
+  final int phase;
+  final Animation<double> animation;
+  final Color backgroundColor;
+
+  const _BokehBackground({
+    required this.phase,
+    required this.animation,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 1500),
+      curve: Curves.easeInOutCubic,
+      color: backgroundColor,
+      child: Stack(
+        children: [
+          // Slow drifting orbs
+          AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                   _PositionedOrb(
+                    top: -50 + (animation.value * 30),
+                    left: -50 + (animation.value * 20),
+                    size: 400,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                  _PositionedOrb(
+                    bottom: 100 - (animation.value * 40),
+                    right: -100 + (animation.value * 30),
+                    size: 500,
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                  _PositionedOrb(
+                     top: 200 + (animation.value * 50),
+                     right: 50,
+                     size: 300,
+                     color: Colors.white.withOpacity(0.03),
+                  ),
+                ],
+              );
+            },
+          ),
+          
+          // Blur Layer for Bokeh effect
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PositionedOrb extends StatelessWidget {
+  final double? top, bottom, left, right;
+  final double size;
+  final Color color;
+
+  const _PositionedOrb({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+class _PhaseTransition extends StatefulWidget {
+  final Widget child;
+  const _PhaseTransition({super.key, required this.child});
+
+  @override
+  State<_PhaseTransition> createState() => _PhaseTransitionState();
+}
+
+class _PhaseTransitionState extends State<_PhaseTransition> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+       vsync: this,
+       duration: const Duration(milliseconds: 1200),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _slide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutQuart,
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _PremiumProgress extends StatelessWidget {
+  final double progress;
+  final Color color;
+  const _PremiumProgress({required this.progress, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 240,
+      height: 3,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 240 * progress,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 0),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -329,53 +492,8 @@ class WispLogo extends StatelessWidget {
       child: Image.asset(
         'assets/images/wisp_logo.png',
         fit: BoxFit.contain,
-        // If color is provided, we can use it to tint the logo if needed
-        // but for now let's use the original logo colors.
         color: color,
       ),
-    );
-  }
-}
-
-class _PositionedCircle extends StatelessWidget {
-  final double? top, bottom, left, right;
-  final double size;
-  final Color color;
-  final Animation<double> animation;
-  final bool reverse;
-
-  const _PositionedCircle({
-    this.top,
-    this.bottom,
-    this.left,
-    this.right,
-    required this.size,
-    required this.color,
-    required this.animation,
-    this.reverse = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final val = reverse ? 1.0 - animation.value : animation.value;
-        return Positioned(
-          top: top != null ? top! + (val * 20) : null,
-          bottom: bottom != null ? bottom! - (val * 20) : null,
-          left: left != null ? left! + (val * 20) : null,
-          right: right != null ? right! - (val * 20) : null,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      },
     );
   }
 }
