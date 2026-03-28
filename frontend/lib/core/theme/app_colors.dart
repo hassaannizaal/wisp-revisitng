@@ -32,10 +32,10 @@ class AppColors {
   static const Color splashRed = Color(0xFF6F2608);
   static const Color splashAccent = Color(0xFFD47A5B);
 
-  // New Purple Theme Splash Colors
-  static const Color splashPhase0 = Color(0xFF2D1B4E); // Deep Purple
-  static const Color splashPhase1 = Color(0xFF827397); // Muted Lavender
-  static const Color splashPhase2 = Color(0xFF9E8CB2); // Dusty Mauve
-  static const Color splashPhase3 = Color(0xFFEBE9F0); // Lavender Mist
+  // New Purple Theme Splash Colors (Aligned with Login 'Deep Room')
+  static const Color splashPhase0 = Color(0xFF0E081A); // Match Login Base
+  static const Color splashPhase1 = Color(0xFF1B1233); // Transition Purple
+  static const Color splashPhase2 = Color(0xFF2D1B4E); // Mid Purple
+  static const Color splashPhase3 = Color(0xFFEBE9F0); // Lavender Mist (End)
   static const Color splashTextDark = Color(0xFF1A0F2E); // Deep Charcoal Purple
 }

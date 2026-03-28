@@ -1,6 +1,7 @@
-import 'dart:async';
-import 'dart:ui';
-import 'package:flutter/material.dart';
+ import 'dart:async';
+ import 'dart:math';
+ import 'dart:ui';
+ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -16,11 +17,36 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  int _phase = 0;
-  double _progress = 0;
-  late Timer _timer;
-
-  // Animation controllers for circles and intro
+   int _phase = 0;
+   double _progress = 0;
+   late Timer _timer;
+   late String _selectedQuote;
+ 
+   static const List<String> _wellnessQuotes = [
+     "You don't have to be okay all the time.",
+     "Rest is not giving up.",
+     "Healing is not linear.",
+     "Still here. Still trying. That counts.",
+     "Surviving is enough.",
+     "Small steps are still movement.",
+     "This moment will pass.",
+     "You've survived every hard day so far.",
+     "Right now is enough.",
+     "Be gentle with yourself.",
+     "You deserve your own kindness.",
+     "Progress, not perfection.",
+     "Breathe. You are still here.",
+     "Pause. You are allowed to pause.",
+     "One breath at a time.",
+     "The night always ends.",
+     "Low days are not lost days.",
+     "Darkness is not the destination.",
+     "You are not your worst thought.",
+     "You are not your diagnosis.",
+     "You are more than this moment.",
+   ];
+ 
+   // Animation controllers for circles and intro
   late AnimationController _circleController;
   late AnimationController _introController;
   late Animation<double> _logoFade;
@@ -28,10 +54,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late Animation<double> _textFade;
   late Animation<Offset> _textSlide;
 
-  @override
-  void initState() {
-    super.initState();
-    _circleController = AnimationController(
+   @override
+   void initState() {
+     super.initState();
+     
+     // Select a random wellness quote
+     _selectedQuote = _wellnessQuotes[Random().nextInt(_wellnessQuotes.length)];
+ 
+     _circleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
     )..repeat();
@@ -138,7 +168,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Color _getContentColor() {
-    return _phase <= 1 ? Colors.white : AppColors.splashTextDark;
+    // Phase 0, 1, and 2 are now dark based. Phase 3 is light.
+    return _phase <= 2 ? Colors.white : AppColors.splashTextDark;
   }
 
   @override
@@ -264,27 +295,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               children: [
                 WispLogo(fontSize: 32, color: contentColor.withValues(alpha: 0.8), showText: false),
                 const SizedBox(height: 56),
-                Text(
-                  '“In the midst of winter, I found there was within me an invincible summer.”',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: contentColor,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w500,
-                    height: 1.6,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Text(
-                  '— ALBERT CAMUS',
-                  style: GoogleFonts.outfit(
-                    color: contentColor.withValues(alpha: 0.5),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 3,
-                  ),
-                ),
+                 Text(
+                   '“$_selectedQuote”',
+                   textAlign: TextAlign.center,
+                   style: GoogleFonts.outfit(
+                     color: contentColor,
+                     fontSize: 26,
+                     fontWeight: FontWeight.w300, // Thinner for a more airy feel
+                     height: 1.6,
+                     fontStyle: FontStyle.italic,
+                   ),
+                 ),
+                 const SizedBox(height: 48), // Bottom padding
               ],
             ),
           ),
@@ -318,19 +340,21 @@ class _BokehBackground extends StatelessWidget {
           AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
-              return Stack(
+               return Stack(
                 children: [
                    _PositionedOrb(
                     top: -50 + (animation.value * 30),
                     left: -50 + (animation.value * 20),
                     size: 400,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    // Pulse with Login screen lavender
+                    color: const Color(0xFF6B5B95).withValues(alpha: 0.12),
                   ),
                   _PositionedOrb(
                     bottom: 100 - (animation.value * 40),
                     right: -100 + (animation.value * 30),
                     size: 500,
-                    color: Colors.white.withValues(alpha: 0.05),
+                    // Pulse with Login screen peach
+                    color: const Color(0xFFE9B384).withValues(alpha: 0.08),
                   ),
                   _PositionedOrb(
                      top: 200 + (animation.value * 50),
