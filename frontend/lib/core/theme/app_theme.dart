@@ -10,7 +10,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: AppColors.background, // Using background color as the main surface
+        surface: AppColors.background,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: AppColors.textPrimary,
@@ -18,60 +18,47 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       textTheme: GoogleFonts.outfitTextTheme().copyWith(
-        displayLarge: GoogleFonts.outfit(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        titleLarge: GoogleFonts.outfit(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        bodyLarge: GoogleFonts.outfit(
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: GoogleFonts.outfit(
-          color: AppColors.textSecondary,
-        ),
+        displayLarge: GoogleFonts.outfit(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        titleLarge: GoogleFonts.outfit(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.outfit(color: AppColors.textPrimary),
+        bodyMedium: GoogleFonts.outfit(color: AppColors.textSecondary),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        hintStyle: GoogleFonts.outfit(color: AppColors.textHint),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        surface: Color(0xFF0E081A),
+        error: AppColors.error,
       ),
-      cardTheme: CardThemeData(
-        color: AppColors.surface,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.divider),
+      scaffoldBackgroundColor: const Color(0xFF0E081A),
+      textTheme: GoogleFonts.outfitTextTheme().apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.black,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+          textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
