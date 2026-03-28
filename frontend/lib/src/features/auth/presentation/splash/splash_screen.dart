@@ -158,10 +158,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
           key: const ValueKey(0),
           mainAxisSize: MainAxisSize.min,
           children: [
-            const WispLogo(size: 80),
+            const WispLogo(size: 120),
             const SizedBox(height: 24),
             Text(
-              'freud.ai',
+              'WISP.ai',
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontSize: 42,
@@ -211,7 +211,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               const WispLogo(size: 40, color: AppColors.splashAccent),
+               const WispLogo(size: 80, color: AppColors.splashAccent),
                const SizedBox(height: 48),
                Text(
                 '“In the midst of winter, I found there was within me an invincible summer.”',
@@ -249,51 +249,20 @@ class WispLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoColor = color ?? AppColors.splashAccent;
     return SizedBox(
       width: size,
       height: size,
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: _Dot(size: size * 0.4, color: logoColor),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _Dot(size: size * 0.4, color: logoColor),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _Dot(size: size * 0.4, color: logoColor),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _Dot(size: size * 0.4, color: logoColor),
-          ),
-        ],
+      child: Image.asset(
+        'assets/images/wisp_logo.png',
+        fit: BoxFit.contain,
+        // If color is provided, we can use it to tint the logo if needed
+        // but for now let's use the original logo colors.
+        color: color, 
       ),
     );
   }
 }
 
-class _Dot extends StatelessWidget {
-  final double size;
-  final Color color;
-  const _Dot({required this.size, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-}
 
 class _PositionedCircle extends StatelessWidget {
   final double? top, bottom, left, right;
