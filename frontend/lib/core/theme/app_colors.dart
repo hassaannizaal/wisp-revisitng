@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static Color get scaffoldDark => const Color(0xFF0E081A); // Deep Room
+  static const Color scaffoldDark = Color(0xFF0E081A); // Deep Room
   
   // Primary Palette
   static const Color primary = Color(0xFF8DBA9A); // Soft Sage Green

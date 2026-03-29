@@ -89,11 +89,11 @@ class FirebaseAuthRepository implements AuthRepository {
       case 'invalid-credential':
         return const InvalidCredentialsFailure();
       case 'email-already-in-use':
-        return const AuthFailure('Email already in use');
+        return const EmailAlreadyInUseFailure();
       case 'weak-password':
-        return const AuthFailure('Password is too weak');
+        return const WeakPasswordFailure();
       case 'invalid-email':
-        return const AuthFailure('Invalid email address');
+        return const InvalidEmailFailure();
       case 'network-request-failed':
         return const NetworkFailure();
       default:

@@ -8,7 +8,6 @@ import '../../../../../core/widgets/luxury_text_field.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
 import '../../../../../core/widgets/luxury_stagger.dart';
 import '../../../../../core/widgets/luxury_button.dart';
-import '../../../../../core/theme/app_colors.dart';
 import 'signup_controller.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -47,8 +46,18 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(signupControllerProvider);
+
+    // Reactive error handling
+    ref.listen<AsyncValue<void>>(signupControllerProvider, (previous, next) {
+      if (!next.isLoading && next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error.toString())),
+        );
+      }
+    });
+
     return Scaffold(
-      backgroundColor: AppColors.scaffoldDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           AuraBackground(animation: _auraController),
@@ -72,20 +81,40 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                   ])),
                   const SizedBox(height: 48),
                   LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Column(children: [
-                    LuxuryTextField(controller: _nameController, label: 'FULL NAME', hintText: 'Enter your name', prefixIcon: Icons.person_outline),
+                    LuxuryTextField(
+                      controller: _nameController, 
+                      label: 'FULL NAME', 
+                      hintText: 'Enter your name', 
+                      prefixIcon: Icons.person_outline,
+                      validator: (val) => (val == null || val.isEmpty) ? 'Name is required' : null,
+                    ),
                     const SizedBox(height: 24),
-                    LuxuryTextField(controller: _emailController, label: 'EMAIL ADDRESS', hintText: 'Enter your email', prefixIcon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+                    LuxuryTextField(
+                      controller: _emailController, 
+                      label: 'EMAIL ADDRESS', 
+                      hintText: 'Enter your email', 
+                      prefixIcon: Icons.email_outlined, 
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return 'Email is required';
+                        if (!val.contains('@')) return 'Invalid email format';
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 24),
-                    LuxuryTextField(controller: _passwordController, label: 'PASSWORD', hintText: 'Create a password', prefixIcon: Icons.lock_outline, isPassword: true),
+                    LuxuryTextField(
+                      controller: _passwordController, 
+                      label: 'PASSWORD', 
+                      hintText: 'Create a password', 
+                      prefixIcon: Icons.lock_outline, 
+                      isPassword: true,
+                      validator: (val) => (val == null || val.length < 6) ? 'Password must be at least 6 characters' : null,
+                    ),
                     const SizedBox(height: 32),
                     LuxuryButton(
                       text: 'Step Into Wellness',
                       isLoading: state.isLoading,
-                      onPressed: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final ok = await ref.read(signupControllerProvider.notifier).signup(_emailController.text, _passwordController.text);
-                        if (mounted && !ok && state.hasError) messenger.showSnackBar(SnackBar(content: Text(state.error.toString())));
-                      },
+                      onPressed: () => ref.read(signupControllerProvider.notifier).signup(_emailController.text, _passwordController.text),
                     ),
                   ]))),
                   const SizedBox(height: 48),

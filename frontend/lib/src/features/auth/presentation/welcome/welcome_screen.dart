@@ -48,7 +48,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E081A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(children: [
         AuraBackground(animation: _aura),
         SafeArea(

@@ -48,8 +48,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginControllerProvider);
+
+    // Reactive error handling
+    ref.listen<AsyncValue<void>>(loginControllerProvider, (previous, next) {
+      if (!next.isLoading && next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error.toString())),
+        );
+      }
+    });
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0E081A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(children: [
         AuraBackground(animation: _aura),
         SafeArea(child: Center(child: SingleChildScrollView(
@@ -70,20 +80,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
             ])),
             const SizedBox(height: 48),
             LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Column(children: [
-              LuxuryTextField(controller: _email, label: 'EMAIL ADDRESS', hintText: 'Enter your email', prefixIcon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+              LuxuryTextField(
+                controller: _email, 
+                label: 'EMAIL ADDRESS', 
+                hintText: 'Enter your email', 
+                prefixIcon: Icons.email_outlined, 
+                keyboardType: TextInputType.emailAddress,
+                validator: (val) => (val == null || val.isEmpty) ? 'Email is required' : null,
+              ),
               const SizedBox(height: 32),
-              LuxuryTextField(controller: _pass, label: 'PASSWORD', hintText: 'Enter your password', prefixIcon: Icons.lock_outline, isPassword: true),
+              LuxuryTextField(
+                controller: _pass, 
+                label: 'PASSWORD', 
+                hintText: 'Enter your password', 
+                prefixIcon: Icons.lock_outline, 
+                isPassword: true,
+                validator: (val) => (val == null || val.isEmpty) ? 'Password is required' : null,
+              ),
               Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('Forgot Password?', style: TextStyle(color: Colors.white60, fontSize: 13)))),
             ]))),
             const SizedBox(height: 32),
             LuxuryStagger(animation: _btnAnim, child: LuxuryButton(
               text: 'Log In',
               isLoading: state.isLoading,
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final ok = await ref.read(loginControllerProvider.notifier).login(_email.text, _pass.text);
-                if (mounted && !ok && state.hasError) messenger.showSnackBar(SnackBar(content: Text(state.error.toString())));
-              },
+              onPressed: () => ref.read(loginControllerProvider.notifier).login(_email.text, _pass.text),
             )),
             const SizedBox(height: 48),
             LuxuryStagger(animation: _socAnim, child: Column(children: [
