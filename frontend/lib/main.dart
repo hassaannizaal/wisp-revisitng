@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/theme/app_theme.dart';
-import 'src/features/auth/presentation/splash/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+import 'core/theme/app_theme.dart';
+import 'core/routing/app_router.dart';
+
+void main() async {
+  // 1. Ensure Flutter bindings are ready before interacting with native code
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 2. Initialize Firebase with our securely generated options
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // 3. Run the app
   runApp(
     const ProviderScope(
       child: WispApp(),
@@ -11,16 +23,18 @@ void main() {
   );
 }
 
-class WispApp extends StatelessWidget {
+class WispApp extends ConsumerWidget {
   const WispApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Wisp Wellness',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
+      title: 'WISP Wellness',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      theme: AppTheme.darkTheme,
+      routerConfig: router,
     );
   }
 }

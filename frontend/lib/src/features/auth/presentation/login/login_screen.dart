@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/widgets/aura_background.dart';
 import '../../../../../core/widgets/luxury_glass_card.dart';
 import '../../../../../core/widgets/luxury_text_field.dart';
@@ -9,7 +10,6 @@ import '../../../../../core/widgets/luxury_button.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
 import '../../../../../core/widgets/social_login_button.dart';
 import 'login_controller.dart';
-import '../signup/signup_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -48,14 +48,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginControllerProvider);
+
+    // Reactive error handling
+    ref.listen<AsyncValue<void>>(loginControllerProvider, (previous, next) {
+      if (!next.isLoading && next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error.toString())),
+        );
+      }
+    });
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0E081A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(children: [
         AuraBackground(animation: _aura),
         SafeArea(child: Center(child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(children: [
-            LuxuryStagger(animation: _logoAnim, child: const WispLogo(fontSize: 32, color: Colors.white)),
+            LuxuryStagger(
+                animation: _logoAnim, 
+                child: const WispLogo(
+                  fontSize: 32, 
+                  color: Colors.white,
+                  heroTag: 'wisp_branding_hero',
+                )),
             const SizedBox(height: 56),
             LuxuryStagger(animation: _headAnim, child: Column(children: [
               Text('Welcome Back', style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
@@ -64,20 +80,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
             ])),
             const SizedBox(height: 48),
             LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Column(children: [
-              LuxuryTextField(controller: _email, label: 'EMAIL ADDRESS', hintText: 'Enter your email', prefixIcon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+              LuxuryTextField(
+                controller: _email, 
+                label: 'EMAIL ADDRESS', 
+                hintText: 'Enter your email', 
+                prefixIcon: Icons.email_outlined, 
+                keyboardType: TextInputType.emailAddress,
+                validator: (val) => (val == null || val.isEmpty) ? 'Email is required' : null,
+              ),
               const SizedBox(height: 32),
-              LuxuryTextField(controller: _pass, label: 'PASSWORD', hintText: 'Enter your password', prefixIcon: Icons.lock_outline, isPassword: true),
+              LuxuryTextField(
+                controller: _pass, 
+                label: 'PASSWORD', 
+                hintText: 'Enter your password', 
+                prefixIcon: Icons.lock_outline, 
+                isPassword: true,
+                validator: (val) => (val == null || val.isEmpty) ? 'Password is required' : null,
+              ),
               Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('Forgot Password?', style: TextStyle(color: Colors.white60, fontSize: 13)))),
             ]))),
             const SizedBox(height: 32),
             LuxuryStagger(animation: _btnAnim, child: LuxuryButton(
               text: 'Log In',
               isLoading: state.isLoading,
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final ok = await ref.read(loginControllerProvider.notifier).login(_email.text, _pass.text);
-                if (mounted && !ok && state.hasError) messenger.showSnackBar(SnackBar(content: Text(state.error.toString())));
-              },
+              onPressed: () => ref.read(loginControllerProvider.notifier).login(_email.text, _pass.text),
             )),
             const SizedBox(height: 48),
             LuxuryStagger(animation: _socAnim, child: Column(children: [
@@ -89,7 +115,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
               const SizedBox(height: 48),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text("Don't have an account? ", style: GoogleFonts.outfit(color: Colors.white54)),
-                GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SignUpScreen())), child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                GestureDetector(
+                  onTap: () => context.go('/signup'), 
+                  child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+                ),
               ]),
             ])),
           ]),

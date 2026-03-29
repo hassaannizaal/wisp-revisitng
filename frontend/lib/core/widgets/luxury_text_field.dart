@@ -8,11 +8,13 @@ class LuxuryTextField extends StatelessWidget {
   final IconData prefixIcon;
   final bool isPassword;
   final TextInputType keyboardType;
+  final String? Function(String?)? validator;
 
   const LuxuryTextField({
     super.key, required this.controller, required this.label, 
     required this.hintText, required this.prefixIcon, 
     this.isPassword = false, this.keyboardType = TextInputType.text,
+    this.validator,
   });
 
   @override
@@ -26,6 +28,7 @@ class LuxuryTextField extends StatelessWidget {
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
+          validator: validator,
           style: const TextStyle(color: Colors.white, fontSize: 16),
           decoration: InputDecoration(
             hintText: hintText,

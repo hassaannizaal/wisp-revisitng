@@ -11,14 +11,17 @@ class AudioService {
   Future<void> playLogoSound() async {
     try {
       // signature zen chime for WISP.ai appearance
-      await _player.play(AssetSource('sounds/startsound_vGPe9df7.wav'));
+      // Renamed for better web resolution/compatibility
+      await _player.play(AssetSource('sounds/start_sound.wav'));
     } catch (e) {
       if (kDebugMode) {
-        if (e.toString().contains('NotAllowedError')) {
+        final errorStr = e.toString();
+        if (errorStr.contains('NotAllowedError')) {
           print('AudioService (Web): Sound blocked by browser. Interaction required before audio plays.');
+        } else if (errorStr.contains('Code: 4') || errorStr.contains('Format error')) {
+          print('AudioService (Web): Format error (Code 4). This usually means the browser does not support the WAV encoding or the file is corrupted.');
         } else {
           print('AudioService: Playback failed ($e)');
-          print('Please ensure assets/sounds/startsound_vGPe9df7.wav exists.');
         }
       }
     }
