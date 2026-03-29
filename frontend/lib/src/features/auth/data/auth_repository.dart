@@ -8,4 +8,5 @@ abstract class AuthRepository {
   Future<AppUser> signUpWithEmailAndPassword(String email, String password, {String? displayName});
   Future<void> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
+  Future<String?> getIdToken();
 }

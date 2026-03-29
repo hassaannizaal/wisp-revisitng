@@ -82,6 +82,11 @@ class FirebaseAuthRepository implements AuthRepository {
     await _auth.signOut();
   }
 
+  @override
+  Future<String?> getIdToken() async {
+    return await _auth.currentUser?.getIdToken();
+  }
+
   Failure _mapFirebaseAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':

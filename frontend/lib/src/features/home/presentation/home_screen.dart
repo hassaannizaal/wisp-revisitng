@@ -51,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   try {
-                    final apiClient = ApiClient();
+                    final apiClient = ref.read(apiClientProvider);
                     final data = await apiClient.getProtectedData();
                     
                     if (context.mounted) {
@@ -89,7 +89,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   try {
-                    final apiClient = ApiClient();
+                    final apiClient = ref.read(apiClientProvider);
                     final data = await apiClient.saveWisp(
                       'Zen',
                       'The architecture is pure and the connection is secure. Handshake complete.',
