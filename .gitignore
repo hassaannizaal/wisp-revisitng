@@ -1,6 +1,7 @@
 # Node.js dependencies
 **/node_modules/
 backend/node_modules/
+serviceAccountKey.json
 
 # Flutter/Dart build artifacts
 frontend/.dart_tool/

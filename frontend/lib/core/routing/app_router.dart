@@ -6,6 +6,7 @@ import '../../src/features/auth/presentation/splash/splash_screen.dart';
 import '../../src/features/auth/presentation/welcome/welcome_screen.dart';
 import '../../src/features/auth/presentation/login/login_screen.dart';
 import '../../src/features/auth/presentation/signup/signup_screen.dart';
+import '../../src/features/home/presentation/home_screen.dart';
 
 enum AppRoute {
   splash,
@@ -90,9 +91,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         name: AppRoute.home.name,
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Home Screen (To be built)')),
-        ),
+        builder: (context, state) => const HomeScreen(),
       ),
     ],
   );

@@ -19,6 +19,7 @@ dependencies:
   firebase_auth: any
   flutter_secure_storage: any
   go_router: any
+  http: ^1.6.0
 
 dependency_overrides:
   analyzer: 11.0.0
