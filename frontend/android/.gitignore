@@ -1,0 +1,18 @@
+# Standard Android/Gradle ignores
+.gradle/
+**/build/
+captures/
+local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+.externalNativeBuild/
+wisp_mental_health_android.iml
+.idea/
+
+# Gradle wrappers (keep the scripts normally, but ignore the jar)
+gradle-wrapper.jar
+
+# Keystore / Secrets
+key.properties
+**/*.keystore
+**/*.jks
