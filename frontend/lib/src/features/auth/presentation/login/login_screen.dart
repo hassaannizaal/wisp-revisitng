@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/widgets/aura_background.dart';
 import '../../../../../core/widgets/luxury_glass_card.dart';
 import '../../../../../core/widgets/luxury_text_field.dart';
@@ -9,7 +10,6 @@ import '../../../../../core/widgets/luxury_button.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
 import '../../../../../core/widgets/social_login_button.dart';
 import 'login_controller.dart';
-import '../signup/signup_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -55,7 +55,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
         SafeArea(child: Center(child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(children: [
-            LuxuryStagger(animation: _logoAnim, child: const WispLogo(fontSize: 32, color: Colors.white)),
+            LuxuryStagger(
+                animation: _logoAnim, 
+                child: const WispLogo(
+                  fontSize: 32, 
+                  color: Colors.white,
+                  heroTag: 'wisp_branding_hero',
+                )),
             const SizedBox(height: 56),
             LuxuryStagger(animation: _headAnim, child: Column(children: [
               Text('Welcome Back', style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
@@ -89,7 +95,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
               const SizedBox(height: 48),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text("Don't have an account? ", style: GoogleFonts.outfit(color: Colors.white54)),
-                GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SignUpScreen())), child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                GestureDetector(
+                  onTap: () => context.go('/signup'), 
+                  child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+                ),
               ]),
             ])),
           ]),

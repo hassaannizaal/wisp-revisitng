@@ -1,14 +1,12 @@
-import 'dart:async';
-import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
-import '../../../../../core/services/audio_service.dart';
-import '../welcome/welcome_screen.dart';
+import 'splash_controller.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -19,36 +17,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  int _phase = 0;
-  double _progress = 0;
-  late Timer _timer;
-  late String _selectedQuote;
-  bool _hasInteracted = false;
-  final Completer<void> _interactionCompleter = Completer<void>();
-
-  static const List<String> _wellnessQuotes = [
-    "You don't have to be okay all the time",
-    "Healing is not linear",
-    "Still here. Still trying. That counts",
-    "Surviving is enough",
-    "Small steps are still movement",
-    "This moment will pass",
-    "You've survived every hard day so far",
-    "Right now is enough",
-    "Be gentle with yourself",
-    "You deserve your own kindness",
-    "Progress, not perfection",
-    "Breathe. You are still here",
-    "Pause. You are allowed to pause",
-    "One breath at a time",
-    "The night always ends",
-    "Low days are not lost days",
-    "Darkness is not the destination",
-    "You are not your worst thought",
-    "You are not your diagnosis",
-    "You are more than this moment",
-  ];
-
+  
   // Animation controllers for circles and intro
   late AnimationController _circleController;
   late AnimationController _introController;
@@ -60,9 +29,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-
-    // Select a random wellness quote
-    _selectedQuote = _wellnessQuotes[Random().nextInt(_wellnessQuotes.length)];
 
     _circleController = AnimationController(
       vsync: this,
@@ -99,72 +65,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    unawaited(_startSplashing());
-  }
-
-  Future<void> _startSplashing() async {
-    unawaited(_introController.forward());
-
-    // Web Autoplay Compliance: Wait for first gesture before sound & phase 1
-    if (kIsWeb && !_hasInteracted) {
-      await _interactionCompleter.future;
-    }
-
-    unawaited(AudioService().playLogoSound());
-
-    // Phase 0: Logo (3s)
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-    setState(() => _phase = 1);
-
-    // Phase 1: Progress (simulate 0 to 99%)
-    _timer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
-      if (_progress < 0.99) {
-        setState(() {
-          _progress += 0.01;
-        });
-      } else {
-        timer.cancel();
-        _nextPhase();
-      }
+    _introController.forward();
+    
+    // Start the splash flow via controller after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(splashControllerProvider.notifier).startFlow();
     });
-  }
-
-  Future<void> _nextPhase() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    setState(() => _phase = 2);
-
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _phase = 3);
-
-    await Future.delayed(const Duration(seconds: 4));
-    if (!mounted) return;
-
-    // ignore: unawaited_futures
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const WelcomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 1000),
-      ),
-    );
   }
 
   @override
   void dispose() {
     _circleController.dispose();
     _introController.dispose();
-    if (mounted && _timer.isActive) _timer.cancel();
     super.dispose();
   }
 
-  Color _getBackgroundColor() {
-    switch (_phase) {
+  Color _getBackgroundColor(int phase) {
+    switch (phase) {
       case 0:
         return AppColors.splashPhase0;
       case 1:
@@ -178,31 +95,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  Color _getContentColor() {
-    // Phase 0, 1, and 2 are now dark based. Phase 3 is light.
-    return _phase <= 2 ? Colors.white : AppColors.splashTextDark;
+  Color _getContentColor(int phase) {
+    return phase <= 2 ? Colors.white : AppColors.splashTextDark;
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(splashControllerProvider);
+    
+    // Listen for completion to navigate
+    ref.listen(splashControllerProvider, (previous, next) {
+      if (next.isComplete && !(previous?.isComplete ?? false)) {
+        context.go('/welcome');
+      }
+    });
+
     return Scaffold(
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () {
-          if (!_hasInteracted) {
-            setState(() => _hasInteracted = true);
-            if (!_interactionCompleter.isCompleted) {
-              _interactionCompleter.complete();
-            }
-          }
-        },
+        onTap: () => ref.read(splashControllerProvider.notifier).handleInteraction(),
         child: Stack(
           children: [
             // Background Gradient and Bokeh
             _BokehBackground(
-              phase: _phase,
+              phase: state.phase,
               animation: _circleController,
-              backgroundColor: _getBackgroundColor(),
+              backgroundColor: _getBackgroundColor(state.phase),
             ),
 
             // Content
@@ -211,7 +129,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 duration: const Duration(milliseconds: 1000),
                 switchInCurve: Curves.easeInOutCubic,
                 switchOutCurve: Curves.easeInOutCubic,
-                child: _buildPhaseContent(),
+                child: _buildPhaseContent(state.phase, state.progress, state.selectedQuote, state.hasInteracted),
               ),
             ),
           ],
@@ -220,10 +138,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 
-  Widget _buildPhaseContent() {
-    final contentColor = _getContentColor();
+  Widget _buildPhaseContent(int phase, double progress, String quote, bool hasInteracted) {
+    final contentColor = _getContentColor(phase);
 
-    switch (_phase) {
+    switch (phase) {
       case 0:
         return AnimatedBuilder(
           key: const ValueKey(0),
@@ -255,7 +173,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                   ),
                 ),
-                if (kIsWeb && !_hasInteracted)
+                if (kIsWeb && !hasInteracted)
                   Padding(
                     padding: const EdgeInsets.only(top: 100),
                     child: _InteractionPrompt(animation: _introController),
@@ -271,7 +189,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${(_progress * 100).toInt()}%',
+                '${(progress * 100).toInt()}%',
                 style: GoogleFonts.outfit(
                   color: contentColor,
                   fontSize: 64,
@@ -280,7 +198,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
               ),
               const SizedBox(height: 40),
-              _PremiumProgress(progress: _progress, color: contentColor),
+              _PremiumProgress(progress: progress, color: contentColor),
             ],
           ),
         );
@@ -326,17 +244,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     showText: false),
                 const SizedBox(height: 56),
                 Text(
-                  _selectedQuote,
+                  quote,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     color: contentColor,
                     fontSize: 26,
-                    fontWeight: FontWeight.w300, // Thinner for a more airy feel
+                    fontWeight: FontWeight.w300,
                     height: 1.6,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                const SizedBox(height: 48), // Bottom padding
+                const SizedBox(height: 48),
               ],
             ),
           ),
@@ -366,7 +284,6 @@ class _BokehBackground extends StatelessWidget {
       color: backgroundColor,
       child: Stack(
         children: [
-          // Slow drifting orbs
           AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
@@ -376,14 +293,12 @@ class _BokehBackground extends StatelessWidget {
                     top: -50 + (animation.value * 30),
                     left: -50 + (animation.value * 20),
                     size: 400,
-                    // Pulse with Login screen lavender
                     color: const Color(0xFF6B5B95).withValues(alpha: 0.12),
                   ),
                   _PositionedOrb(
                     bottom: 100 - (animation.value * 40),
                     right: -100 + (animation.value * 30),
                     size: 500,
-                    // Pulse with Login screen peach
                     color: const Color(0xFFE9B384).withValues(alpha: 0.08),
                   ),
                   _PositionedOrb(
@@ -396,8 +311,6 @@ class _BokehBackground extends StatelessWidget {
               );
             },
           ),
-
-          // Blur Layer for Bokeh effect
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),

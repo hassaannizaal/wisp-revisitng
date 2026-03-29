@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/widgets/aura_background.dart';
 import '../../../../../core/widgets/luxury_glass_card.dart';
 import '../../../../../core/widgets/luxury_text_field.dart';
@@ -9,7 +10,6 @@ import '../../../../../core/widgets/luxury_stagger.dart';
 import '../../../../../core/widgets/luxury_button.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'signup_controller.dart';
-import '../login/login_screen.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -57,7 +57,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 children: [
-                  LuxuryStagger(animation: _logoAnim, child: const WispLogo(fontSize: 32, color: Colors.white)),
+                   LuxuryStagger(
+                    animation: _logoAnim, 
+                    child: const WispLogo(
+                      fontSize: 32, 
+                      color: Colors.white,
+                      heroTag: 'wisp_branding_hero',
+                    )),
                   const SizedBox(height: 56),
                   LuxuryStagger(animation: _headAnim, child: Column(children: [
                     Text('Create Account', style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
@@ -85,7 +91,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                   const SizedBox(height: 48),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Text("Already have an account? ", style: GoogleFonts.outfit(color: Colors.white54)),
-                    GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const LoginScreen())), child: Text('Login', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold))),
+                    GestureDetector(
+                      onTap: () => context.go('/login'), 
+                      child: Text('Login', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold))
+                    ),
                   ]),
                 ],
               ),

@@ -4,12 +4,14 @@ class WispLogo extends StatefulWidget {
   final double fontSize;
   final Color color;
   final bool showText;
+  final String? heroTag;
 
   const WispLogo({
     super.key, 
     this.fontSize = 42, 
     this.color = Colors.white,
     this.showText = true,
+    this.heroTag,
   });
 
   @override
@@ -42,7 +44,7 @@ class _WispLogoState extends State<WispLogo> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final logo = Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -103,5 +105,27 @@ class _WispLogoState extends State<WispLogo> with SingleTickerProviderStateMixin
         ]
       ],
     );
+
+    if (widget.heroTag != null) {
+      return Hero(
+        tag: widget.heroTag!,
+        // Use a custom flight shuttle to ensure the breathing animation continues
+        // and to handle any constraint changes during the transition gracefully.
+        flightShuttleBuilder: (flightContext, animation, direction, fromContext, toContext) {
+          return DefaultTextStyle(
+            style: DefaultTextStyle.of(toContext).style,
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: logo,
+              ),
+            ),
+          );
+        },
+        child: logo,
+      );
+    }
+
+    return logo;
   }
 }

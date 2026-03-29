@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/widgets/aura_background.dart';
 import '../../../../../core/widgets/luxury_glass_card.dart';
 import '../../../../../core/widgets/luxury_stagger.dart';
 import '../../../../../core/widgets/luxury_button.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
-import '../login/login_screen.dart';
-import '../signup/signup_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -59,7 +58,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             const Spacer(flex: 2),
             LuxuryStagger(
                 animation: _logoAnim,
-                child: const WispLogo(fontSize: 48, color: Colors.white)),
+                child: const WispLogo(
+                  fontSize: 48, 
+                  color: Colors.white,
+                  heroTag: 'wisp_branding_hero',
+                )),
             const Spacer(),
             LuxuryStagger(
                 animation: _headAnim,
@@ -88,16 +91,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                   LuxuryButton(
                       text: 'Get Started',
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (c) => const SignUpScreen()))),
+                      onPressed: () => context.go('/signup')),
                   const SizedBox(height: 16),
                   TextButton(
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (c) => const LoginScreen())),
+                      onPressed: () => context.go('/login'),
                       child: Text('LOG IN',
                           style: GoogleFonts.outfit(
                               color: Colors.white,

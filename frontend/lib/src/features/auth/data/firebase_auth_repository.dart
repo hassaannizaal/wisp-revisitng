@@ -1,12 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/services/secure_storage_service.dart';
 import '../domain/app_user.dart';
 import 'auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth;
+  final SecureStorageService _secureStorage;
 
-  FirebaseAuthRepository(this._auth);
+  FirebaseAuthRepository(this._auth, this._secureStorage);
 
   // Helper method to convert Firebase User to our custom AppUser
   AppUser? _mapFirebaseUser(User? firebaseUser) {
@@ -33,10 +36,18 @@ class FirebaseAuthRepository implements AuthRepository {
         email: email,
         password: password,
       );
+      
+      // Store token securely if needed (optional for Firebase, but good practice here)
+      final token = await credential.user?.getIdToken();
+      if (token != null) {
+        await _secureStorage.saveToken(token);
+      }
+      
       return _mapFirebaseUser(credential.user)!;
     } on FirebaseAuthException catch (e) {
-      // Throw clean error messages to show in the UI
-      throw Exception(e.message ?? 'Login failed');
+      throw _mapFirebaseAuthException(e);
+    } catch (e) {
+      throw ServerFailure(e.toString());
     }
   }
 
@@ -48,21 +59,18 @@ class FirebaseAuthRepository implements AuthRepository {
         password: password,
       );
       
-      // Update the display name if provided
       if (displayName != null && displayName.isNotEmpty) {
         await credential.user?.updateDisplayName(displayName);
       }
       
       return _mapFirebaseUser(credential.user)!;
-      // Note: If you want to use the createUserWithEmailAndPassword name from the old interface, 
-      // replace this method with one that matches that name. 
-      // However, the user-supplied code used 'signUpWithEmailAndPassword'.
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? 'Sign up failed');
+      throw _mapFirebaseAuthException(e);
+    } catch (e) {
+      throw ServerFailure(e.toString());
     }
   }
 
-  // Bridging method for the existing interface
   @override
   Future<void> createUserWithEmailAndPassword(String email, String password) async {
     await signUpWithEmailAndPassword(email, password);
@@ -70,7 +78,27 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    await _secureStorage.deleteToken();
     await _auth.signOut();
+  }
+
+  Failure _mapFirebaseAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return const InvalidCredentialsFailure();
+      case 'email-already-in-use':
+        return const AuthFailure('Email already in use');
+      case 'weak-password':
+        return const AuthFailure('Password is too weak');
+      case 'invalid-email':
+        return const AuthFailure('Invalid email address');
+      case 'network-request-failed':
+        return const NetworkFailure();
+      default:
+        return AuthFailure(e.message ?? 'Authentication failed');
+    }
   }
 }
 
@@ -86,7 +114,8 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
 // We override the old mock provider with the REAL Firebase one here!
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final firebaseAuth = ref.watch(firebaseAuthProvider);
-  return FirebaseAuthRepository(firebaseAuth);
+  final secureStorage = ref.watch(secureStorageServiceProvider);
+  return FirebaseAuthRepository(firebaseAuth, secureStorage);
 });
 
 // Stream for Auth State
