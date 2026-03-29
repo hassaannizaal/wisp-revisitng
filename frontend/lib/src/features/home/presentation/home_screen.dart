@@ -77,6 +77,47 @@ class HomeScreen extends ConsumerWidget {
                 },
                 child: Text('Test Secure Backend Connection', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
               ),
+              const SizedBox(height: 20),
+              
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigoAccent.shade200,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 8,
+                ),
+                onPressed: () async {
+                  try {
+                    final apiClient = ApiClient();
+                    final data = await apiClient.saveWisp(
+                      'Zen',
+                      'The architecture is pure and the connection is secure. Handshake complete.',
+                    );
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Success! Wisp ID: ${data['wispId']}'),
+                          backgroundColor: Colors.blue.shade800,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to Save Wisp: $e'),
+                          backgroundColor: Colors.orange.shade900,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text('Save My First Wisp', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
         ),

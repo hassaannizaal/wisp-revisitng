@@ -30,11 +30,40 @@ class ApiClient {
 
     // 4. Handle the server's response
     if (response.statusCode == 200) {
-      print('Backend says: ${response.body}');
       return jsonDecode(response.body);
     } else {
-      print('Backend rejected us: ${response.body}');
       throw Exception('Failed to load data: ${response.statusCode}');
+    }
+  }
+
+  /// Performs a secure POST request to save a new Wisp
+  Future<Map<String, dynamic>> saveWisp(String mood, String reflection) async {
+    // 1. Get the current logged-in WISP user
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Security Alert: No user logged in.');
+
+    // 2. Extract the secure Firebase ID Token
+    final idToken = await user.getIdToken();
+
+    // 3. Perform the POST request to the First Real Endpoint
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/wisps'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'mood': mood,
+        'reflection': reflection,
+      }),
+    );
+
+    // 4. Handle the response
+    final responseData = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      return responseData;
+    } else {
+      throw Exception(responseData['error'] ?? 'Failed to save Wisp');
     }
   }
 }
