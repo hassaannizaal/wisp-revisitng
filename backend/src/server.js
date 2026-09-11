@@ -6,6 +6,7 @@ const { loadConfig } = require('./config');
 const { createLogger } = require('./logger');
 const { initFirebase } = require('./firebase');
 const { createWispsRepository } = require('./wisps/repository');
+const { createMoodsRepository } = require('./moods/repository');
 const { createApp } = require('./app');
 
 const config = loadConfig();
@@ -14,7 +15,13 @@ const logger = createLogger({ level: config.logLevel, pretty: !config.isProducti
 let server;
 try {
   const { auth, db } = initFirebase({ ...config.firebase, logger });
-  const app = createApp({ auth, wisps: createWispsRepository(db), logger, config });
+  const app = createApp({
+    auth,
+    wisps: createWispsRepository(db),
+    moods: createMoodsRepository(db),
+    logger,
+    config,
+  });
   server = app.listen(config.port, () => {
     logger.info({ port: config.port, env: config.env }, 'Server exhaling');
   });

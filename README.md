@@ -47,6 +47,9 @@ Smoke test: `curl http://localhost:5000/health`
 | GET | `/api/wisps/protected` | Bearer | Echoes the caller's uid/email (connection self-test) |
 | GET | `/api/wisps?limit=20` | Bearer | The caller's wisps, newest first (max 100) |
 | POST | `/api/wisps` | Bearer | Body `{ "mood": string ≤ 50, "reflection": string ≤ 2000 }` → `201 { wispId, wisp }` |
+| GET | `/api/moods?from=&to=&limit=` | Bearer | The caller's check-ins, newest first (`mood_logs` only — never notes) |
+| POST | `/api/moods` | Bearer | `{ id: uuid, mood: low|flat|okay|good|bright, loggedAt, note? }` → `201`; a replay of the same `id` → `200`, no duplicate |
+| PATCH | `/api/moods/:id` | Bearer | `{ mood }` — corrects the caller's own check-in |
 
 Errors are always JSON: `{ "error": "message", "details"?: [{ field, message }] }`.
 Requests under `/api` are rate limited (100 per 15 min per IP by default) and bodies are capped at 16 KB.
@@ -91,7 +94,9 @@ cd firebase
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-The `GET /api/wisps` query needs the composite index `(uid ASC, createdAt DESC)`; until it is deployed the endpoint answers `503`.
+`GET /api/wisps` needs the composite index `(uid ASC, createdAt DESC)` and `GET /api/moods` needs `(uid ASC, loggedAt DESC)`; until they are deployed those endpoints answer `503`.
+
+Mood ratings (`mood_logs`) and the words behind them (`mood_notes`) are separate collections on purpose, so an admin query has no path from one to the other.
 
 Local emulators (optional, needs Java 11+): `firebase emulators:start` from `firebase/`, then add
 `FIRESTORE_EMULATOR_HOST=localhost:8080` and `FIREBASE_AUTH_EMULATOR_HOST=localhost:9099` to `backend/.env`.

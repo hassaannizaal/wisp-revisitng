@@ -5,7 +5,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_metrics.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_buttons.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/routing/app_routes.dart';
 import '../../auth/data/firebase_auth_repository.dart';
+import '../../moods/presentation/mood_check_in_controller.dart';
 import '../../wisps/domain/wisp.dart';
 import 'home_controller.dart';
 
@@ -32,6 +36,7 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(authRepositoryProvider).currentUser;
     final firstName = (user?.displayName ?? '').trim().split(' ').first;
     final wisps = ref.watch(recentWispsProvider);
+    final today = ref.watch(todayMoodProvider).valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,6 +63,19 @@ class HomeScreen extends ConsumerWidget {
                 style: AppType.bodyMedium.copyWith(color: c.textSecondary),
               ),
               const SizedBox(height: Space.lg),
+              Text('TODAY', style: AppType.monoLabel.copyWith(color: c.textTertiary)),
+              const SizedBox(height: Space.sm),
+              _TodayCard(
+                prompt: today == null
+                    ? 'How are you arriving today?'
+                    : 'Logged as ${today.mood.label}. Want to write about it?',
+                action: today == null ? 'Check in' : 'Check in again',
+                onTap: () async {
+                  await context.push(AppRoutes.moodNew);
+                  ref.invalidate(todayMoodProvider);
+                },
+              ),
+              const SizedBox(height: Space.lg),
               PrimaryButton(label: 'Save a wisp', icon: Icons.add, onPressed: () => _saveWisp(context, ref)),
               const SizedBox(height: Space.xl),
               Row(
@@ -77,6 +95,34 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TodayCard extends StatelessWidget {
+  const _TodayCard({required this.prompt, required this.action, required this.onTap});
+
+  final String prompt;
+  final String action;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.wisp;
+    return Container(
+      padding: const EdgeInsets.all(Space.base),
+      decoration: BoxDecoration(color: c.raised, borderRadius: Radii.cardR),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(prompt, style: AppType.voice.copyWith(color: c.textPrimary)),
+          const SizedBox(height: Space.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(onPressed: onTap, child: Text(action)),
+          ),
+        ],
       ),
     );
   }

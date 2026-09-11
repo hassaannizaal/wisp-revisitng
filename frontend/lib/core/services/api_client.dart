@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 import '../../src/features/auth/data/auth_repository.dart';
+import '../../src/features/moods/domain/mood.dart';
 import '../../src/features/wisps/domain/wisp.dart';
 import '../config/app_config.dart';
 
@@ -60,6 +61,35 @@ class ApiClient {
     final json = await _send('GET', '/wisps', query: {'limit': '$limit'});
     return (json['wisps'] as List<dynamic>)
         .map((item) => Wisp.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  // ---- Moods (docs/screens/05-mood-check-in.md) ----------------------------
+
+  /// Idempotent on the log's id: the server answers 201 for a new log and 200
+  /// for a replay, and both are a success here.
+  Future<MoodLog> postMood(MoodLog log) async {
+    final json = await _send('POST', '/moods', body: log.toRequest());
+    return MoodLog.fromJson(json['moodLog'] as Map<String, dynamic>);
+  }
+
+  Future<MoodLog> patchMood(String id, Mood mood) async {
+    final json = await _send('PATCH', '/moods/$id', body: {'mood': mood.value});
+    return MoodLog.fromJson(json['moodLog'] as Map<String, dynamic>);
+  }
+
+  Future<List<MoodLog>> fetchMoods({DateTime? from, DateTime? to, int limit = 60}) async {
+    final json = await _send(
+      'GET',
+      '/moods',
+      query: {
+        if (from != null) 'from': from.toUtc().toIso8601String(),
+        if (to != null) 'to': to.toUtc().toIso8601String(),
+        'limit': '$limit',
+      },
+    );
+    return (json['moods'] as List<dynamic>)
+        .map((item) => MoodLog.fromJson(item as Map<String, dynamic>))
         .toList(growable: false);
   }
 

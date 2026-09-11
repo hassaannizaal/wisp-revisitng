@@ -9,6 +9,8 @@ import '../../src/features/auth/presentation/sign_up/sign_up_screen.dart';
 import '../../src/features/auth/presentation/splash/splash_screen.dart';
 import '../../src/features/auth/presentation/welcome/welcome_screen.dart';
 import '../../src/features/home/presentation/home_screen.dart';
+import '../../src/features/moods/presentation/mood_check_in_screen.dart';
+import '../widgets/placeholder_screen.dart';
 import '../theme/app_metrics.dart';
 import 'app_routes.dart';
 
@@ -40,6 +42,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.signIn, pageBuilder: (context, state) => _fade(state, const SignInScreen())),
       GoRoute(path: AppRoutes.signUp, pageBuilder: (context, state) => _fade(state, const SignUpScreen())),
       GoRoute(path: AppRoutes.home, builder: (context, state) => const HomeScreen()),
+      GoRoute(path: AppRoutes.moodNew, builder: (context, state) => const MoodCheckInScreen()),
+      GoRoute(
+        path: AppRoutes.journalNew,
+        builder: (context, state) => const PlaceholderScreen(title: 'Journal'),
+      ),
     ],
   );
 });

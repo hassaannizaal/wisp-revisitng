@@ -6,6 +6,7 @@ const cors = require('cors');
 const { rateLimit } = require('express-rate-limit');
 const { pinoHttp } = require('pino-http');
 const { wispsRouter } = require('./wisps/router');
+const { moodsRouter } = require('./moods/router');
 const { notFound, errorHandler } = require('./middleware/errors');
 
 /**
@@ -15,10 +16,11 @@ const { notFound, errorHandler } = require('./middleware/errors');
  * @param {object} deps
  * @param {object} deps.auth   firebase-admin Auth (needs `verifyIdToken`)
  * @param {object} deps.wisps  wisps repository (see src/wisps/repository.js)
+ * @param {object} deps.moods  moods repository (see src/moods/repository.js)
  * @param {import('pino').Logger} deps.logger
  * @param {ReturnType<typeof import('./config').loadConfig>} deps.config
  */
-function createApp({ auth, wisps, logger, config }) {
+function createApp({ auth, wisps, moods, logger, config }) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -53,6 +55,7 @@ function createApp({ auth, wisps, logger, config }) {
     }),
   );
   app.use('/api/wisps', wispsRouter({ auth, wisps }));
+  app.use('/api/moods', moodsRouter({ auth, moods }));
 
   app.use(notFound);
   app.use(errorHandler);
