@@ -23,10 +23,7 @@ class ApiException implements Exception {
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(
-    authRepo: ref.watch(authRepositoryProvider),
-    baseUrl: ref.watch(appConfigProvider).apiBaseUrl,
-  );
+  return ApiClient(authRepo: ref.watch(authRepositoryProvider), baseUrl: ref.watch(appConfigProvider).apiBaseUrl);
 });
 
 /// Thin, typed HTTP client for the WISP backend.
@@ -39,10 +36,10 @@ class ApiClient {
     required String baseUrl,
     http.Client? client,
     Duration timeout = const Duration(seconds: 15),
-  })  : _authRepo = authRepo,
-        _baseUrl = baseUrl,
-        _client = client ?? http.Client(),
-        _timeout = timeout;
+  }) : _authRepo = authRepo,
+       _baseUrl = baseUrl,
+       _client = client ?? http.Client(),
+       _timeout = timeout;
 
   final AuthRepository _authRepo;
   final String _baseUrl;
@@ -92,9 +89,7 @@ class ApiClient {
 
     final serverMessage = decoded['error'];
     throw ApiException(
-      serverMessage is String && serverMessage.isNotEmpty
-          ? serverMessage
-          : 'Request failed (${response.statusCode})',
+      serverMessage is String && serverMessage.isNotEmpty ? serverMessage : 'Request failed (${response.statusCode})',
       statusCode: response.statusCode,
     );
   }
@@ -107,11 +102,7 @@ class ApiClient {
     if (idToken == null) {
       throw const ApiException('Your session has expired. Please sign in again.');
     }
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $idToken',
-    };
+    return {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $idToken'};
   }
 
   /// Tolerates non-JSON bodies (proxies and load balancers return HTML errors).

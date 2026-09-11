@@ -12,20 +12,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 2. Initialize Firebase with our securely generated options
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // 2.5 Load environment variables. Optional so a missing key falls back to
   // the defaults in AppConfig instead of crashing before the first frame.
   await dotenv.load(fileName: ".env", isOptional: true);
 
   // 3. Run the app
-  runApp(
-    const ProviderScope(
-      child: WispApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: WispApp()));
 }
 
 class WispApp extends ConsumerWidget {
@@ -36,9 +30,12 @@ class WispApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'WISP Wellness',
+      title: 'WISP LIFE',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      // Dark-first until the user chooses otherwise (see CLAUDE.md).
+      themeMode: ThemeMode.dark,
       routerConfig: router,
     );
   }

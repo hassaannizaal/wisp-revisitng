@@ -1,110 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../../core/widgets/aura_background.dart';
-import '../../../../../core/widgets/luxury_glass_card.dart';
-import '../../../../../core/widgets/luxury_stagger.dart';
-import '../../../../../core/widgets/luxury_button.dart';
-import '../../../../../core/widgets/wisp_logo.dart';
 
-class WelcomeScreen extends StatefulWidget {
+import '../../../../../core/routing/app_routes.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_metrics.dart';
+import '../../../../../core/theme/app_typography.dart';
+import '../../../../../core/widgets/app_buttons.dart';
+import '../../../../../core/widgets/breathing_orb.dart';
+import '../../../../../core/widgets/wash_background.dart';
+import '../../../../../core/widgets/wordmark.dart';
+
+/// Spec: docs/screens/01-welcome.md
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _main, _aura;
-  late Animation<double> _logoAnim, _headAnim, _subAnim, _actionAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _main = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1500));
-    _aura =
-        AnimationController(vsync: this, duration: const Duration(seconds: 20))
-          ..repeat();
-    const c = Curves.fastOutSlowIn;
-    _logoAnim = CurvedAnimation(
-        parent: _main, curve: const Interval(0.0, 0.4, curve: c));
-    _headAnim = CurvedAnimation(
-        parent: _main, curve: const Interval(0.2, 0.6, curve: c));
-    _subAnim = CurvedAnimation(
-        parent: _main, curve: const Interval(0.35, 0.75, curve: c));
-    _actionAnim = CurvedAnimation(
-        parent: _main, curve: const Interval(0.5, 0.9, curve: c));
-    _main.forward();
-  }
-
-  @override
-  void dispose() {
-    _main.dispose();
-    _aura.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.wisp;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(children: [
-        AuraBackground(animation: _aura),
-        SafeArea(
-            child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(children: [
-            const Spacer(flex: 2),
-            LuxuryStagger(
-                animation: _logoAnim,
-                child: const WispLogo(
-                  fontSize: 48, 
-                  color: Colors.white,
-                  heroTag: 'wisp_branding_hero',
-                )),
-            const Spacer(),
-            LuxuryStagger(
-                animation: _headAnim,
-                child: Text('Pause. Breathe. Begin.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                        fontSize: 42,
-                        height: 1.1,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: -1.5))),
-            const SizedBox(height: 24),
-            LuxuryStagger(
-                animation: _subAnim,
-                child: Text('A sanctuary for your thoughts and your healing',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        color: Colors.white54,
-                        fontWeight: FontWeight.w300,
-                        height: 1.5))),
-            const Spacer(flex: 4),
-            LuxuryStagger(
-                animation: _actionAnim,
-                child: LuxuryGlassCard(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  LuxuryButton(
-                      text: 'Get Started',
-                      onPressed: () => context.go('/signup')),
-                  const SizedBox(height: 16),
-                  TextButton(
-                      onPressed: () => context.go('/login'),
-                      child: Text('LOG IN',
-                          style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 3))),
-                ]))),
-          ]),
-        )),
-      ]),
+      body: WashBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Space.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: Space.base),
+                      child: Align(alignment: Alignment.centerLeft, child: Wordmark()),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const BreathingOrb(size: 104, ringSize: 132),
+                              const SizedBox(height: Space.xl),
+                              Text(
+                                'A quiet place to put things down',
+                                textAlign: TextAlign.center,
+                                style: AppType.displayLarge.copyWith(color: c.textPrimary),
+                              ),
+                              const SizedBox(height: Space.base),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 300),
+                                child: Text(
+                                  'Check in daily, write when you need to, and talk it through whenever the hour gets long.',
+                                  textAlign: TextAlign.center,
+                                  style: AppType.bodyLarge.copyWith(color: c.textSecondary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    PrimaryButton(label: 'Create an account', onPressed: () => context.go(AppRoutes.signUp)),
+                    const SizedBox(height: Space.md),
+                    SecondaryButton(label: 'I already have one', onPressed: () => context.go(AppRoutes.signIn)),
+                    const SizedBox(height: Space.base),
+                    Text(
+                      'Nothing you write is shared unless you choose to share it.',
+                      textAlign: TextAlign.center,
+                      style: AppType.caption.copyWith(color: c.textTertiary),
+                    ),
+                    const SizedBox(height: Space.base),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

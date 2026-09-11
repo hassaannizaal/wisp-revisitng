@@ -15,7 +15,7 @@ class AuthFailure extends Failure {
 }
 
 class InvalidCredentialsFailure extends AuthFailure {
-  const InvalidCredentialsFailure([super.message = 'Invalid email or password']);
+  const InvalidCredentialsFailure([super.message = "That password doesn't match this email."]);
 }
 
 class InvalidEmailFailure extends AuthFailure {

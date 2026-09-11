@@ -32,10 +32,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AppUser> signInWithEmailAndPassword(String email, String password) {
     return _guard(() async {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return _mapFirebaseUser(credential.user)!;
     });
   }
@@ -43,10 +40,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AppUser> signUpWithEmailAndPassword(String email, String password, {String? displayName}) {
     return _guard(() async {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
       final user = credential.user;
       if (user != null && displayName != null && displayName.isNotEmpty) {

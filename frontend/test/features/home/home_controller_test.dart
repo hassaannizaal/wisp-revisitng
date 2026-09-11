@@ -27,11 +27,13 @@ void main() {
   http.Response json(Object body, {int status = 200}) => http.Response(jsonEncode(body), status);
 
   test('loads the recent wisps on first read', () async {
-    final container = containerWith((_) => json({
-          'wisps': [
-            {'id': 'a', 'mood': 'Zen', 'reflection': 'one', 'createdAt': null},
-          ],
-        }));
+    final container = containerWith(
+      (_) => json({
+        'wisps': [
+          {'id': 'a', 'mood': 'Zen', 'reflection': 'one', 'createdAt': null},
+        ],
+      }),
+    );
 
     final wisps = await container.read(recentWispsProvider.future);
 

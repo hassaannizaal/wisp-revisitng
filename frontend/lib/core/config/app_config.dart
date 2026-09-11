@@ -12,9 +12,7 @@ class AppConfig {
   /// Builds the config from `.env`, falling back to the local backend.
   factory AppConfig.fromEnv() {
     final raw = dotenv.maybeGet('API_BASE_URL')?.trim();
-    return AppConfig(
-      apiBaseUrl: _normalizeBaseUrl(raw == null || raw.isEmpty ? defaultApiBaseUrl : raw),
-    );
+    return AppConfig(apiBaseUrl: _normalizeBaseUrl(raw == null || raw.isEmpty ? defaultApiBaseUrl : raw));
   }
 
   static const defaultApiBaseUrl = 'http://localhost:5000/api';

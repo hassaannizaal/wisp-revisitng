@@ -1,125 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/services/api_client.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_metrics.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_buttons.dart';
 import '../../auth/data/firebase_auth_repository.dart';
 import '../../wisps/domain/wisp.dart';
 import 'home_controller.dart';
 
+/// Interim hub on the new tokens. Replaced by docs/screens/04-home.md once
+/// mood, water and the mode badge exist to fill it.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  void _notify(BuildContext context, String message, {required Color color}) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating));
-  }
-
-  Future<void> _testConnection(BuildContext context, WidgetRef ref) async {
-    try {
-      final data = await ref.read(apiClientProvider).getProtectedData();
-      if (context.mounted) _notify(context, 'Success! ${data['message']}', color: Colors.green.shade800);
-    } catch (e) {
-      if (context.mounted) _notify(context, 'Backend Rejected Request: $e', color: Colors.red.shade800);
-    }
-  }
-
   Future<void> _saveWisp(BuildContext context, WidgetRef ref) async {
     try {
-      final wisp = await ref.read(recentWispsProvider.notifier).save(
-            mood: 'Zen',
-            reflection: 'The architecture is pure and the connection is secure. Handshake complete.',
-          );
-      if (context.mounted) _notify(context, 'Success! Wisp ID: ${wisp.id}', color: Colors.blue.shade800);
+      await ref
+          .read(recentWispsProvider.notifier)
+          .save(mood: 'Zen', reflection: 'The architecture is pure and the connection is secure. Handshake complete.');
     } catch (e) {
-      if (context.mounted) _notify(context, 'Failed to Save Wisp: $e', color: Colors.orange.shade900);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save that. $e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.wisp;
+    final user = ref.watch(authRepositoryProvider).currentUser;
+    final firstName = (user?.displayName ?? '').trim().split(' ').first;
     final wisps = ref.watch(recentWispsProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('WISP Dashboard', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text(firstName.isEmpty ? 'Home' : 'Hello, $firstName'),
         actions: [
-          IconButton(
-            tooltip: 'Log out',
-            icon: const Icon(Icons.logout, color: Colors.white70),
+          TapTargetIconButton(
+            icon: Icons.logout,
+            tooltip: 'Sign out',
             onPressed: () => ref.read(authRepositoryProvider).signOut(),
           ),
+          const SizedBox(width: Space.sm),
         ],
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: ListView(
-            padding: const EdgeInsets.all(24.0),
+            padding: Space.screen.copyWith(top: Space.base, bottom: Space.xl),
             children: [
-              const SizedBox(height: 24),
-              const Icon(Icons.cloud_done_outlined, size: 80, color: Colors.white24),
-              const SizedBox(height: 24),
+              Text('A quiet place to put things down', style: AppType.displayMedium.copyWith(color: c.textPrimary)),
+              const SizedBox(height: Space.sm),
               Text(
-                'Security Handshake Ready',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                'Your session is active and the backend is listening.',
+                style: AppType.bodyMedium.copyWith(color: c.textSecondary),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Your Firebase session is active. You can now securely communicate with the WISP Node.js backend.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(fontSize: 16, color: Colors.white54, height: 1.5),
-              ),
-              const SizedBox(height: 48),
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () => _testConnection(context, ref),
-                  child: Text('Test Secure Backend Connection', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigoAccent.shade200,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 8,
-                  ),
-                  onPressed: () => _saveWisp(context, ref),
-                  child: Text('Save My First Wisp', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 48),
+              const SizedBox(height: Space.lg),
+              PrimaryButton(label: 'Save a wisp', icon: Icons.add, onPressed: () => _saveWisp(context, ref)),
+              const SizedBox(height: Space.xl),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'RECENT WISPS',
-                    style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 2),
-                  ),
-                  IconButton(
+                  Text('RECENT', style: AppType.monoLabel.copyWith(color: c.textTertiary)),
+                  TapTargetIconButton(
+                    icon: Icons.refresh,
+                    size: 20,
                     tooltip: 'Refresh',
-                    icon: const Icon(Icons.refresh, color: Colors.white54, size: 20),
                     onPressed: () => ref.invalidate(recentWispsProvider),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Space.sm),
               _RecentWisps(wisps: wisps),
-              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -135,17 +89,15 @@ class _RecentWisps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.wisp;
     return wisps.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: CircularProgressIndicator(color: Colors.white38, strokeWidth: 2)),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(vertical: Space.xl),
+        child: Center(child: CircularProgressIndicator(color: c.textTertiary, strokeWidth: 2)),
       ),
-      error: (error, _) => _Message(
-        icon: Icons.cloud_off_outlined,
-        text: 'Could not load your wisps.\n$error',
-      ),
+      error: (error, _) => _Message(text: 'Could not load your wisps.\n$error'),
       data: (items) => items.isEmpty
-          ? const _Message(icon: Icons.auto_awesome_outlined, text: 'No wisps yet. Save your first one above.')
+          ? const _Message(text: 'Nothing here yet. Save your first one above.')
           : Column(children: [for (final wisp in items) _WispTile(wisp: wisp)]),
     );
   }
@@ -158,65 +110,56 @@ class _WispTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.wisp;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: Space.md),
+      padding: const EdgeInsets.all(Space.base),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: c.raised,
+        borderRadius: Radii.cardR,
+        border: Border.all(color: c.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.indigoAccent.shade200.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(wisp.mood, style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-              ),
+              Text(wisp.mood.toUpperCase(), style: AppType.monoLabel.copyWith(color: c.accentInk)),
               const Spacer(),
-              Text(_formatDate(wisp.createdAt), style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
+              Text(_relative(wisp.createdAt), style: AppType.monoLabel.copyWith(color: c.textTertiary)),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(wisp.reflection, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14, height: 1.5)),
+          const SizedBox(height: Space.sm),
+          Text(wisp.reflection, style: AppType.voiceBody.copyWith(color: c.textPrimary)),
         ],
       ),
     );
   }
 
-  static String _formatDate(DateTime? date) {
-    if (date == null) return 'Just now';
-    final difference = DateTime.now().difference(date);
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inHours < 1) return '${difference.inMinutes} min ago';
-    if (difference.inDays < 1) return '${difference.inHours} h ago';
-    if (difference.inDays < 7) return '${difference.inDays} d ago';
+  static String _relative(DateTime? date) {
+    if (date == null) return 'JUST NOW';
+    final d = DateTime.now().difference(date);
+    if (d.inMinutes < 1) return 'JUST NOW';
+    if (d.inHours < 1) return '${d.inMinutes} MIN AGO';
+    if (d.inDays < 1) return '${d.inHours} H AGO';
+    if (d.inDays < 7) return '${d.inDays} D AGO';
     return '${date.day}/${date.month}/${date.year}';
   }
 }
 
 class _Message extends StatelessWidget {
-  const _Message({required this.icon, required this.text});
+  const _Message({required this.text});
 
-  final IconData icon;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white24, size: 32),
-          const SizedBox(height: 12),
-          Text(text, textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 14, height: 1.5)),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: Space.lg),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: AppType.bodyMedium.copyWith(color: context.wisp.textTertiary),
       ),
     );
   }

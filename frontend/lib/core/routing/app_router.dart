@@ -1,105 +1,66 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../src/features/auth/data/firebase_auth_repository.dart';
+import '../../src/features/auth/presentation/sign_in/sign_in_screen.dart';
+import '../../src/features/auth/presentation/sign_up/sign_up_screen.dart';
 import '../../src/features/auth/presentation/splash/splash_screen.dart';
 import '../../src/features/auth/presentation/welcome/welcome_screen.dart';
-import '../../src/features/auth/presentation/login/login_screen.dart';
-import '../../src/features/auth/presentation/signup/signup_screen.dart';
 import '../../src/features/home/presentation/home_screen.dart';
-
-enum AppRoute {
-  splash,
-  welcome,
-  login,
-  signup,
-  home,
-}
+import '../theme/app_metrics.dart';
+import 'app_routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  
+  final refresh = _AuthRefreshNotifier(ref);
+  ref.onDispose(refresh.dispose);
+
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: kDebugMode,
-    refreshListenable: AuthRefreshNotifier(ref),
+    refreshListenable: refresh,
     redirect: (context, state) {
-      final user = authRepository.currentUser;
-      final isLoggedIn = user != null;
+      final auth = ref.read(authStateChangesProvider);
       final path = state.uri.path;
 
-      // If the user is on the splash screen, let the splash screen handle its own timing
-      // and then it will navigate to welcome or home.
-      if (path == '/splash') return null;
+      // Session not restored yet: hold on the splash, never flash the welcome
+      // screen at someone who is already signed in.
+      if (auth.isLoading) return path == AppRoutes.splash ? null : AppRoutes.splash;
 
-      // If logged in and trying to access auth pages, go to home
-      if (isLoggedIn) {
-        if (path == '/login' || path == '/signup' || path == '/welcome') {
-          return '/home';
-        }
-      } else {
-        // If not logged in and trying to access home, go to welcome
-        if (path == '/home') {
-          return '/welcome';
-        }
-      }
-
+      final signedIn = auth.valueOrNull != null;
+      if (path == AppRoutes.splash) return signedIn ? AppRoutes.home : AppRoutes.welcome;
+      if (!signedIn && !AppRoutes.public.contains(path)) return AppRoutes.welcome;
+      if (signedIn && AppRoutes.public.contains(path)) return AppRoutes.home;
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        name: AppRoute.splash.name,
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/welcome',
-        name: AppRoute.welcome.name,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const WelcomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      ),
-      GoRoute(
-        path: '/login',
-        name: AppRoute.login.name,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      ),
-      GoRoute(
-        path: '/signup',
-        name: AppRoute.signup.name,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const SignUpScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      ),
-      GoRoute(
-        path: '/home',
-        name: AppRoute.home.name,
-        builder: (context, state) => const HomeScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
+      GoRoute(path: AppRoutes.welcome, pageBuilder: (context, state) => _fade(state, const WelcomeScreen())),
+      GoRoute(path: AppRoutes.signIn, pageBuilder: (context, state) => _fade(state, const SignInScreen())),
+      GoRoute(path: AppRoutes.signUp, pageBuilder: (context, state) => _fade(state, const SignUpScreen())),
+      GoRoute(path: AppRoutes.home, builder: (context, state) => const HomeScreen()),
     ],
   );
 });
 
-class AuthRefreshNotifier extends ChangeNotifier {
-  AuthRefreshNotifier(Ref ref) {
+CustomTransitionPage<void> _fade(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: Motion.settle,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Motion.settleCurve),
+        child: child,
+      );
+    },
+  );
+}
+
+/// Re-runs the redirect whenever the auth state changes.
+class _AuthRefreshNotifier extends ChangeNotifier {
+  _AuthRefreshNotifier(Ref ref) {
     ref.listen(authStateChangesProvider, (_, _) => notifyListeners());
   }
 }

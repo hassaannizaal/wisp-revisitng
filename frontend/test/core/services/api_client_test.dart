@@ -73,9 +73,11 @@ void main() {
 
       await expectLater(
         api.saveWisp(mood: '', reflection: ''),
-        throwsA(isA<ApiException>()
-            .having((e) => e.message, 'message', 'Validation failed')
-            .having((e) => e.statusCode, 'statusCode', 400)),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.message, 'message', 'Validation failed')
+              .having((e) => e.statusCode, 'statusCode', 400),
+        ),
       );
     });
   });
@@ -114,9 +116,11 @@ void main() {
 
       await expectLater(
         api.getProtectedData(),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', isNull)
-            .having((e) => e.message, 'message', contains('Could not reach'))),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', isNull)
+              .having((e) => e.message, 'message', contains('Could not reach')),
+        ),
       );
     });
 

@@ -3,12 +3,7 @@ import 'package:flutter/foundation.dart';
 /// A single reflection saved by the user.
 @immutable
 class Wisp {
-  const Wisp({
-    required this.id,
-    required this.mood,
-    required this.reflection,
-    this.createdAt,
-  });
+  const Wisp({required this.id, required this.mood, required this.reflection, this.createdAt});
 
   factory Wisp.fromJson(Map<String, dynamic> json) {
     final createdAt = json['createdAt'];
@@ -28,11 +23,11 @@ class Wisp {
   final DateTime? createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'mood': mood,
-        'reflection': reflection,
-        'createdAt': createdAt?.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'mood': mood,
+    'reflection': reflection,
+    'createdAt': createdAt?.toUtc().toIso8601String(),
+  };
 
   @override
   bool operator ==(Object other) =>

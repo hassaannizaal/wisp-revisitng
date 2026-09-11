@@ -4,12 +4,7 @@ class AppUser {
   final String? displayName;
   final String? photoUrl;
 
-  const AppUser({
-    required this.uid,
-    required this.email,
-    this.displayName,
-    this.photoUrl,
-  });
+  const AppUser({required this.uid, required this.email, this.displayName, this.photoUrl});
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
@@ -21,12 +16,7 @@ class AppUser {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'uid': uid,
-      'email': email,
-      'displayName': displayName,
-      'photoUrl': photoUrl,
-    };
+    return {'uid': uid, 'email': email, 'displayName': displayName, 'photoUrl': photoUrl};
   }
 
   @override
@@ -40,6 +30,5 @@ class AppUser {
           photoUrl == other.photoUrl;
 
   @override
-  int get hashCode =>
-      uid.hashCode ^ email.hashCode ^ displayName.hashCode ^ photoUrl.hashCode;
+  int get hashCode => uid.hashCode ^ email.hashCode ^ displayName.hashCode ^ photoUrl.hashCode;
 }
