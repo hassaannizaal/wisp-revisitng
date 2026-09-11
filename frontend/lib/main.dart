@@ -16,8 +16,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // 2.5 Load environment variables
-  await dotenv.load(fileName: ".env");
+  // 2.5 Load environment variables. Optional so a missing key falls back to
+  // the defaults in AppConfig instead of crashing before the first frame.
+  await dotenv.load(fileName: ".env", isOptional: true);
 
   // 3. Run the app
   runApp(

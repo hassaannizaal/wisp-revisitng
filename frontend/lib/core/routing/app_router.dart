@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   
   return GoRouter(
     initialLocation: '/splash',
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     refreshListenable: AuthRefreshNotifier(ref),
     redirect: (context, state) {
       final user = authRepository.currentUser;
@@ -99,6 +100,6 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class AuthRefreshNotifier extends ChangeNotifier {
   AuthRefreshNotifier(Ref ref) {
-    ref.listen(authStateChangesProvider, (_, __) => notifyListeners());
+    ref.listen(authStateChangesProvider, (_, _) => notifyListeners());
   }
 }

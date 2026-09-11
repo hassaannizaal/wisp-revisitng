@@ -9,7 +9,6 @@ frontend/build/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.pub-cache/
-frontend/pubspec.lock
 
 # Firebase
 firebase/.firebase/

@@ -8,6 +8,7 @@ import '../../../../../core/widgets/luxury_text_field.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
 import '../../../../../core/widgets/luxury_stagger.dart';
 import '../../../../../core/widgets/luxury_button.dart';
+import '../validators.dart';
 import 'signup_controller.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -17,6 +18,7 @@ class SignUpScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController(), _emailController = TextEditingController(), _passwordController = TextEditingController();
   late AnimationController _mainController, _auraController;
   late Animation<double> _logoAnim, _headAnim, _formAnim;
@@ -46,6 +48,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(signupControllerProvider);
+
+    void submit() {
+      if (_formKey.currentState?.validate() != true) return;
+      ref.read(signupControllerProvider.notifier).signup(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+    }
 
     // Reactive error handling
     ref.listen<AsyncValue<void>>(signupControllerProvider, (previous, next) {
@@ -80,13 +91,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                     Text('Join Wisp to start your journey.', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w300, color: Colors.white54, letterSpacing: 0.5)),
                   ])),
                   const SizedBox(height: 48),
-                  LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Column(children: [
+                  LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Form(key: _formKey, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
                     LuxuryTextField(
                       controller: _nameController, 
                       label: 'FULL NAME', 
                       hintText: 'Enter your name', 
                       prefixIcon: Icons.person_outline,
-                      validator: (val) => (val == null || val.isEmpty) ? 'Name is required' : null,
+                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Name is required' : null,
                     ),
                     const SizedBox(height: 24),
                     LuxuryTextField(
@@ -95,11 +106,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                       hintText: 'Enter your email', 
                       prefixIcon: Icons.email_outlined, 
                       keyboardType: TextInputType.emailAddress,
-                      validator: (val) {
-                        if (val == null || val.isEmpty) return 'Email is required';
-                        if (!val.contains('@')) return 'Invalid email format';
-                        return null;
-                      },
+                      validator: validateEmail,
                     ),
                     const SizedBox(height: 24),
                     LuxuryTextField(
@@ -108,15 +115,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                       hintText: 'Create a password', 
                       prefixIcon: Icons.lock_outline, 
                       isPassword: true,
-                      validator: (val) => (val == null || val.length < 6) ? 'Password must be at least 6 characters' : null,
+                      validator: validatePassword,
                     ),
                     const SizedBox(height: 32),
                     LuxuryButton(
                       text: 'Step Into Wellness',
                       isLoading: state.isLoading,
-                      onPressed: () => ref.read(signupControllerProvider.notifier).signup(_emailController.text, _passwordController.text),
+                      onPressed: submit,
                     ),
-                  ]))),
+                  ])))),
                   const SizedBox(height: 48),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Text("Already have an account? ", style: GoogleFonts.outfit(color: Colors.white54)),

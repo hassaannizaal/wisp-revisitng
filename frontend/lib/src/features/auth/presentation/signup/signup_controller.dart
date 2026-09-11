@@ -8,9 +8,11 @@ class SignupController extends AutoDisposeAsyncNotifier<void> {
     // nothing to do
   }
 
-  Future<void> signup(String email, String password) async {
+  Future<void> signup({required String name, required String email, required String password}) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).createUserWithEmailAndPassword(email, password));
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signUpWithEmailAndPassword(email, password, displayName: name),
+    );
   }
 }
 

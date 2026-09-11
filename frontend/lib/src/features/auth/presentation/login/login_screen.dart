@@ -9,6 +9,7 @@ import '../../../../../core/widgets/luxury_stagger.dart';
 import '../../../../../core/widgets/luxury_button.dart';
 import '../../../../../core/widgets/wisp_logo.dart';
 import '../../../../../core/widgets/social_login_button.dart';
+import '../validators.dart';
 import 'login_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController(), _pass = TextEditingController();
   late AnimationController _main, _aura;
   late Animation<double> _logoAnim, _headAnim, _formAnim, _btnAnim, _socAnim;
@@ -49,6 +51,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   Widget build(BuildContext context) {
     final state = ref.watch(loginControllerProvider);
 
+    void submit() {
+      if (_formKey.currentState?.validate() != true) return;
+      ref.read(loginControllerProvider.notifier).login(_email.text.trim(), _pass.text);
+    }
+
     // Reactive error handling
     ref.listen<AsyncValue<void>>(loginControllerProvider, (previous, next) {
       if (!next.isLoading && next.hasError) {
@@ -79,14 +86,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
               Text('Log in to continue your wellness journey.', style: GoogleFonts.outfit(fontSize: 16, color: Colors.white54)),
             ])),
             const SizedBox(height: 48),
-            LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Column(children: [
+            LuxuryStagger(animation: _formAnim, child: LuxuryGlassCard(child: Form(key: _formKey, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
               LuxuryTextField(
                 controller: _email, 
                 label: 'EMAIL ADDRESS', 
                 hintText: 'Enter your email', 
                 prefixIcon: Icons.email_outlined, 
                 keyboardType: TextInputType.emailAddress,
-                validator: (val) => (val == null || val.isEmpty) ? 'Email is required' : null,
+                validator: validateEmail,
               ),
               const SizedBox(height: 32),
               LuxuryTextField(
@@ -98,12 +105,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                 validator: (val) => (val == null || val.isEmpty) ? 'Password is required' : null,
               ),
               Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('Forgot Password?', style: TextStyle(color: Colors.white60, fontSize: 13)))),
-            ]))),
+            ])))),
             const SizedBox(height: 32),
             LuxuryStagger(animation: _btnAnim, child: LuxuryButton(
               text: 'Log In',
               isLoading: state.isLoading,
-              onPressed: () => ref.read(loginControllerProvider.notifier).login(_email.text, _pass.text),
+              onPressed: submit,
             )),
             const SizedBox(height: 48),
             LuxuryStagger(animation: _socAnim, child: Column(children: [
