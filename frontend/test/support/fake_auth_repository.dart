@@ -13,7 +13,7 @@ class FakeAuthRepository implements AuthRepository {
   final List<String> calls = [];
 
   /// When set, the next sign-in / sign-up throws this instead of succeeding.
-  Object? failure;
+  Exception? failure;
 
   @override
   Stream<AppUser?> authStateChanges() => _controller.stream;

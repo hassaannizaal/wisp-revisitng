@@ -12,7 +12,7 @@ void main() {
     });
 
     test('treats a pending server timestamp as null', () {
-      final wisp = Wisp.fromJson({'id': 'w1', 'mood': 'Zen', 'reflection': 'Calm', 'createdAt': null});
+      final wisp = Wisp.fromJson(const {'id': 'w1', 'mood': 'Zen', 'reflection': 'Calm', 'createdAt': null});
       expect(wisp.createdAt, isNull);
     });
 
