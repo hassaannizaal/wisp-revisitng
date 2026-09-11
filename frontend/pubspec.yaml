@@ -1,40 +1,28 @@
 name: wisp_mental_health
-description: "A new Flutter project."
+description: "WISP - a calm space for daily reflections."
 publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: ^3.9.0
+  flutter: '>=3.35.0'
 
 dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^6.3.3
   flutter_riverpod: ^2.6.1
-  freezed_annotation: ^2.4.4
-  json_annotation: ^4.9.0
-  riverpod_annotation: ^2.6.1
   audioplayers: ^5.2.1
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
-  flutter_secure_storage: ^10.0.0
   go_router: ^17.1.0
   http: ^1.6.0
   flutter_dotenv: ^5.2.1
 
-dependency_overrides:
-  analyzer: 11.0.0
-  meta: 1.18.2
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: any
-  build_runner: any
-  freezed: any
-  json_serializable: any
-  riverpod_generator: any
-  riverpod_lint: any
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

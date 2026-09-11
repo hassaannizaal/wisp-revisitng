@@ -1,15 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/services/secure_storage_service.dart';
 import '../domain/app_user.dart';
 import 'auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth;
-  final SecureStorageService _secureStorage;
 
-  FirebaseAuthRepository(this._auth, this._secureStorage);
+  FirebaseAuthRepository(this._auth);
 
   // Helper method to convert Firebase User to our custom AppUser
   AppUser? _mapFirebaseUser(User? firebaseUser) {
@@ -18,6 +17,7 @@ class FirebaseAuthRepository implements AuthRepository {
       uid: firebaseUser.uid,
       email: firebaseUser.email ?? '',
       displayName: firebaseUser.displayName,
+      photoUrl: firebaseUser.photoURL,
     );
   }
 
@@ -30,61 +30,56 @@ class FirebaseAuthRepository implements AuthRepository {
   AppUser? get currentUser => _mapFirebaseUser(_auth.currentUser);
 
   @override
-  Future<AppUser> signInWithEmailAndPassword(String email, String password) async {
-    try {
+  Future<AppUser> signInWithEmailAndPassword(String email, String password) {
+    return _guard(() async {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      // Store token securely if needed (optional for Firebase, but good practice here)
-      final token = await credential.user?.getIdToken();
-      if (token != null) {
-        await _secureStorage.saveToken(token);
-      }
-      
       return _mapFirebaseUser(credential.user)!;
-    } on FirebaseAuthException catch (e) {
-      throw _mapFirebaseAuthException(e);
-    } catch (e) {
-      throw ServerFailure(e.toString());
-    }
+    });
   }
 
   @override
-  Future<AppUser> signUpWithEmailAndPassword(String email, String password, {String? displayName}) async {
-    try {
+  Future<AppUser> signUpWithEmailAndPassword(String email, String password, {String? displayName}) {
+    return _guard(() async {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      if (displayName != null && displayName.isNotEmpty) {
-        await credential.user?.updateDisplayName(displayName);
+
+      final user = credential.user;
+      if (user != null && displayName != null && displayName.isNotEmpty) {
+        await user.updateDisplayName(displayName);
+        // The cached user still carries the old (null) name until it is reloaded.
+        await user.reload();
       }
-      
-      return _mapFirebaseUser(credential.user)!;
-    } on FirebaseAuthException catch (e) {
-      throw _mapFirebaseAuthException(e);
-    } catch (e) {
-      throw ServerFailure(e.toString());
-    }
+
+      return _mapFirebaseUser(_auth.currentUser ?? user)!;
+    });
   }
 
   @override
-  Future<void> createUserWithEmailAndPassword(String email, String password) async {
-    await signUpWithEmailAndPassword(email, password);
-  }
+  Future<void> signOut() => _auth.signOut();
 
-  @override
-  Future<void> signOut() async {
-    await _secureStorage.deleteToken();
-    await _auth.signOut();
-  }
-
+  /// Firebase refreshes the ID token itself when it is close to expiry, so this
+  /// is always safe to call right before a request.
   @override
   Future<String?> getIdToken() async {
     return await _auth.currentUser?.getIdToken();
+  }
+
+  /// Maps every failure to a [Failure] whose message is safe to show to users.
+  Future<T> _guard<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on FirebaseAuthException catch (e) {
+      throw _mapFirebaseAuthException(e);
+    } catch (e, stackTrace) {
+      // Raw exception text can contain internals; log it, show a generic message.
+      debugPrint('Auth error: $e\n$stackTrace');
+      throw const ServerFailure();
+    }
   }
 
   Failure _mapFirebaseAuthException(FirebaseAuthException e) {
@@ -101,6 +96,10 @@ class FirebaseAuthRepository implements AuthRepository {
         return const InvalidEmailFailure();
       case 'network-request-failed':
         return const NetworkFailure();
+      case 'too-many-requests':
+        return const AuthFailure('Too many attempts. Please wait a moment and try again');
+      case 'user-disabled':
+        return const AuthFailure('This account has been disabled');
       default:
         return AuthFailure(e.message ?? 'Authentication failed');
     }
@@ -116,11 +115,8 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
-// We override the old mock provider with the REAL Firebase one here!
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final firebaseAuth = ref.watch(firebaseAuthProvider);
-  final secureStorage = ref.watch(secureStorageServiceProvider);
-  return FirebaseAuthRepository(firebaseAuth, secureStorage);
+  return FirebaseAuthRepository(ref.watch(firebaseAuthProvider));
 });
 
 // Stream for Auth State

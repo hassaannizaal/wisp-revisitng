@@ -1,79 +1,127 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+
 import '../../src/features/auth/data/auth_repository.dart';
+import '../../src/features/wisps/domain/wisp.dart';
+import '../config/app_config.dart';
+
+/// Raised for any failed call to the WISP API. [message] is always safe to show
+/// to the user; [statusCode] is null when the request never reached the server.
+class ApiException implements Exception {
+  const ApiException(this.message, {this.statusCode});
+
+  final String message;
+  final int? statusCode;
+
+  bool get isUnauthorized => statusCode == 401;
+
+  @override
+  String toString() => message;
+}
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final authRepo = ref.watch(authRepositoryProvider);
-  return ApiClient(authRepo);
+  return ApiClient(
+    authRepo: ref.watch(authRepositoryProvider),
+    baseUrl: ref.watch(appConfigProvider).apiBaseUrl,
+  );
 });
 
+/// Thin, typed HTTP client for the WISP backend.
+///
+/// Every request carries the current user's Firebase ID token, times out, and
+/// maps failures to [ApiException] so callers never touch raw HTTP details.
 class ApiClient {
+  ApiClient({
+    required AuthRepository authRepo,
+    required String baseUrl,
+    http.Client? client,
+    Duration timeout = const Duration(seconds: 15),
+  })  : _authRepo = authRepo,
+        _baseUrl = baseUrl,
+        _client = client ?? http.Client(),
+        _timeout = timeout;
+
   final AuthRepository _authRepo;
-  late final String baseUrl;
+  final String _baseUrl;
+  final http.Client _client;
+  final Duration _timeout;
 
-  ApiClient(this._authRepo) {
-    // Falls back to localhost if .env is missing or key is undefined
-    baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
+  /// Verifies the token round-trip against the protected endpoint.
+  Future<Map<String, dynamic>> getProtectedData() async {
+    return _send('GET', '/wisps/protected');
   }
 
-  /// Performs a secure GET request to the backend
-  Future<dynamic> getProtectedData() async {
-    // 1. Get the current logged-in WISP user from the repository
-    final user = _authRepo.currentUser;
-    if (user == null) throw Exception('Security Alert: No user logged in.');
+  Future<Wisp> saveWisp({required String mood, required String reflection}) async {
+    final json = await _send('POST', '/wisps', body: {'mood': mood, 'reflection': reflection});
+    return Wisp.fromJson(json['wisp'] as Map<String, dynamic>);
+  }
 
-    // 2. Extract the secure Firebase ID Token via the repository abstraction
-    final idToken = await _authRepo.getIdToken();
-    if (idToken == null) throw Exception('Security Alert: Could not retrieve ID Token.');
+  Future<List<Wisp>> fetchWisps({int limit = 20}) async {
+    final json = await _send('GET', '/wisps', query: {'limit': '$limit'});
+    return (json['wisps'] as List<dynamic>)
+        .map((item) => Wisp.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
 
-    // 3. Perform the request with the "Secret Handshake" (Bearer Token)
-    final response = await http.get(
-      Uri.parse('$baseUrl/wisps/protected'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken', 
-      },
-    );
+  Future<Map<String, dynamic>> _send(
+    String method,
+    String path, {
+    Map<String, String>? query,
+    Map<String, Object?>? body,
+  }) async {
+    final headers = await _authHeaders();
+    final uri = Uri.parse('$_baseUrl$path').replace(queryParameters: query);
+    final request = http.Request(method, uri)..headers.addAll(headers);
+    if (body != null) request.body = jsonEncode(body);
 
-    // 4. Handle the server's response
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load data: ${response.statusCode}');
+    final http.Response response;
+    try {
+      response = await http.Response.fromStream(await _client.send(request)).timeout(_timeout);
+    } on TimeoutException {
+      throw const ApiException('The server took too long to respond. Please try again.');
+    } on http.ClientException {
+      // package:http wraps socket/HTTP-level failures on every platform, including web.
+      throw const ApiException('Could not reach the WISP server. Check your connection.');
     }
+
+    final decoded = _decode(response);
+    if (response.statusCode >= 200 && response.statusCode < 300) return decoded;
+
+    final serverMessage = decoded['error'];
+    throw ApiException(
+      serverMessage is String && serverMessage.isNotEmpty
+          ? serverMessage
+          : 'Request failed (${response.statusCode})',
+      statusCode: response.statusCode,
+    );
   }
 
-  /// Performs a secure POST request to save a new Wisp
-  Future<Map<String, dynamic>> saveWisp(String mood, String reflection) async {
-    // 1. Get the current logged-in WISP user from the repository
-    final user = _authRepo.currentUser;
-    if (user == null) throw Exception('Security Alert: No user logged in.');
-
-    // 2. Extract the secure Firebase ID Token via the repository abstraction
+  Future<Map<String, String>> _authHeaders() async {
+    if (_authRepo.currentUser == null) {
+      throw const ApiException('You need to be signed in to do that.');
+    }
     final idToken = await _authRepo.getIdToken();
-    if (idToken == null) throw Exception('Security Alert: Could not retrieve ID Token.');
+    if (idToken == null) {
+      throw const ApiException('Your session has expired. Please sign in again.');
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $idToken',
+    };
+  }
 
-    // 3. Perform the POST request to the backend
-    final response = await http.post(
-      Uri.parse('$baseUrl/wisps'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
-      },
-      body: jsonEncode({
-        'mood': mood,
-        'reflection': reflection,
-      }),
-    );
-
-    // 4. Handle the response
-    final responseData = jsonDecode(response.body);
-    if (response.statusCode == 201) {
-      return responseData;
-    } else {
-      throw Exception(responseData['error'] ?? 'Failed to save Wisp');
+  /// Tolerates non-JSON bodies (proxies and load balancers return HTML errors).
+  static Map<String, dynamic> _decode(http.Response response) {
+    if (response.body.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(response.body);
+      return decoded is Map<String, dynamic> ? decoded : const {};
+    } on FormatException {
+      return const {};
     }
   }
 }
