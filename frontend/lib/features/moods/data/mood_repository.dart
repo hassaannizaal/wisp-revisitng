@@ -1,50 +1,50 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/services/api_client.dart';
+import '../../../core/storage/local_first_repository.dart';
 import '../../../core/storage/local_store.dart';
 import '../../auth/data/firebase_auth_repository.dart';
 import '../domain/mood.dart';
 
-/// Local-first access to the user's check-ins.
-///
-/// Every write lands in [LocalStore] first and is pushed to the API behind
-/// it. Reads come from the local copy, which [refresh] reconciles with the
-/// server. The user never waits on the network to see their own data.
-class MoodRepository {
+/// Local-first access to the user's check-ins. Spec: docs/screens/05-mood-check-in.md
+class MoodRepository extends LocalFirstRepository<MoodLog> {
   MoodRepository({
-    required LocalStore store,
+    required super.store,
     required ApiClient api,
     required String uid,
     Uuid? uuid,
     DateTime Function()? now,
-  }) : _store = store,
-       _api = api,
-       _uid = uid,
+  }) : _api = api,
        _uuid = uuid ?? const Uuid(),
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       // Keyed per user so two accounts on one device never see each other's logs.
+       super(key: 'moods.$uid.logs');
 
-  final LocalStore _store;
   final ApiClient _api;
-  final String _uid;
   final Uuid _uuid;
   final DateTime Function() _now;
 
-  Future<void>? _syncInFlight;
+  @override
+  MoodLog fromJson(Map<String, dynamic> json) => MoodLog.fromJson(json);
 
-  // Keyed per user so two accounts on one device never see each other's logs.
-  String get _key => 'moods.$_uid.logs';
+  @override
+  MoodLog withSync(MoodLog item, SyncState sync) => item.copyWith(sync: sync);
 
-  /// Everything known locally, newest first.
-  Future<List<MoodLog>> all() async {
-    final raw = await _store.read(_key);
-    if (raw is! List) return const [];
-    final logs = raw.map((e) => MoodLog.fromJson(Map<String, dynamic>.from(e as Map))).toList()
-      ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
-    return logs;
+  @override
+  int compare(MoodLog a, MoodLog b) => b.loggedAt.compareTo(a.loggedAt);
+
+  @override
+  Future<MoodLog> push(MoodLog item) async {
+    var acknowledged = switch (item.sync) {
+      SyncState.pendingCreate => await _api.postMood(item),
+      SyncState.pendingUpdate => await _api.patchMood(item.id, item.mood),
+      SyncState.synced => item,
+    };
+    // A replayed create answers with whatever the server already had; the
+    // newer local edit wins.
+    if (acknowledged.mood != item.mood) acknowledged = await _api.patchMood(item.id, item.mood);
+    return acknowledged;
   }
 
   Future<MoodLog?> today() async {
@@ -58,86 +58,48 @@ class MoodRepository {
   /// Records a check-in immediately (spec: writes on selection, not on
   /// Continue). Returns as soon as the local write is done; the network push
   /// runs behind it and retries on the next [sync].
-  Future<MoodLog> log(Mood mood, {DateTime? at}) async {
-    final entry = MoodLog(id: _uuid.v4(), mood: mood, loggedAt: at ?? _now(), sync: SyncState.pendingCreate);
-    await _upsert(entry);
-    unawaited(sync());
-    return entry;
-  }
+  Future<MoodLog> log(Mood mood, {DateTime? at}) =>
+      save(MoodLog(id: _uuid.v4(), mood: mood, loggedAt: at ?? _now(), sync: SyncState.pendingCreate));
 
   /// Changes the mood on an existing log, e.g. a corrected tap on the same
   /// check-in. One check-in stays one log.
   Future<MoodLog> changeMood(String id, Mood mood) async {
-    final current = (await all()).firstWhere((l) => l.id == id);
-    final next = current.copyWith(
-      mood: mood,
-      // A log the server has never seen is still just a create.
-      sync: current.sync == SyncState.pendingCreate ? SyncState.pendingCreate : SyncState.pendingUpdate,
+    final current = (await byId(id))!;
+    return save(
+      current.copyWith(
+        mood: mood,
+        // A log the server has never seen is still just a create.
+        sync: current.sync == SyncState.pendingCreate ? SyncState.pendingCreate : SyncState.pendingUpdate,
+      ),
     );
-    await _upsert(next);
-    unawaited(sync());
-    return next;
   }
 
-  /// Pushes every unsynced log. Stops at the first transport failure and
-  /// leaves the rest pending for next time; other failures are logged and
-  /// skipped so one bad record cannot block the queue.
-  Future<void> sync() => _syncInFlight ??= _sync().whenComplete(() => _syncInFlight = null);
-
-  Future<void> _sync() async {
-    // A log can be edited while its request is in flight, which leaves it
-    // pending again; a few passes settle that without spinning forever.
-    for (var pass = 0; pass < 3; pass++) {
-      final pending = (await all()).where((l) => !l.isSynced).toList();
-      if (pending.isEmpty) return;
-      var progressed = false;
-
-      for (final log in pending) {
-        try {
-          var acknowledged = switch (log.sync) {
-            SyncState.pendingCreate => await _api.postMood(log),
-            SyncState.pendingUpdate => await _api.patchMood(log.id, log.mood),
-            SyncState.synced => log,
-          };
-          // A replayed create answers with whatever the server already had;
-          // the newer local edit wins.
-          if (acknowledged.mood != log.mood) acknowledged = await _api.patchMood(log.id, log.mood);
-
-          final latest = (await all()).firstWhere((l) => l.id == log.id, orElse: () => log);
-          if (latest.mood == log.mood) {
-            await _upsert(acknowledged.copyWith(sync: SyncState.synced));
-          } else {
-            await _upsert(latest.copyWith(sync: SyncState.pendingUpdate));
-          }
-          progressed = true;
-        } on ApiException catch (e) {
-          if (e.statusCode == null) return; // offline — try again later
-          debugPrint('Mood sync skipped ${log.id}: ${e.message}');
-        }
-      }
-      if (!progressed) return;
-    }
-  }
-
-  /// Pulls the last [window] from the server and merges it in. Local edits
-  /// that have not been acknowledged yet always win over the server copy.
+  /// Pulls the last [window] from the server and merges it in.
   Future<List<MoodLog>> refresh({Duration window = const Duration(days: 30)}) async {
     await sync();
     final now = _now();
-    final remote = await _api.fetchMoods(from: now.subtract(window), to: now.add(const Duration(days: 1)));
-    final local = {for (final l in await all()) l.id: l};
-    for (final log in remote) {
-      final mine = local[log.id];
-      if (mine == null || mine.isSynced) local[log.id] = log;
-    }
-    await _store.write(_key, local.values.map((l) => l.toJson()).toList());
-    return all();
+    return merge(await _api.fetchMoods(from: now.subtract(window), to: now.add(const Duration(days: 1))));
   }
 
-  Future<void> _upsert(MoodLog entry) async {
-    final logs = {for (final l in await all()) l.id: l}..[entry.id] = entry;
-    await _store.write(_key, logs.values.map((l) => l.toJson()).toList());
+  /// Consecutive days with a check-in, counting back from today (or from
+  /// yesterday if today has none yet). `unbroken` is true when today counts.
+  Future<({int days, bool unbroken})> streak() async {
+    final logged = <DateTime>{for (final l in await all()) DateTime(l.loggedAt.year, l.loggedAt.month, l.loggedAt.day)};
+    final today = _now();
+    var day = DateTime(today.year, today.month, today.day);
+    final unbroken = logged.contains(day);
+    if (!unbroken) day = _dayBefore(day);
+    var days = 0;
+    while (logged.contains(day)) {
+      days++;
+      day = _dayBefore(day);
+    }
+    return (days: days, unbroken: unbroken);
   }
+
+  // Calendar arithmetic, not `subtract(Duration(days: 1))`: across a DST
+  // change that lands on 23:00 or 01:00 and misses the midnight keys.
+  static DateTime _dayBefore(DateTime day) => DateTime(day.year, day.month, day.day - 1);
 }
 
 final moodRepositoryProvider = Provider<MoodRepository>((ref) {

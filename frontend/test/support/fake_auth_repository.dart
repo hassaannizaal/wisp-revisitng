@@ -18,6 +18,13 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Stream<AppUser?> authStateChanges() => _controller.stream;
 
+  /// Firebase reports the restored session as the stream's first event;
+  /// tests call this to simulate it.
+  void emitInitial(AppUser? user) {
+    _user = user;
+    _controller.add(user);
+  }
+
   @override
   AppUser? get currentUser => _user;
 

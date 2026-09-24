@@ -50,6 +50,8 @@ Smoke test: `curl http://localhost:5000/health`
 | GET | `/api/moods?from=&to=&limit=` | Bearer | The caller's check-ins, newest first (`mood_logs` only — never notes) |
 | POST | `/api/moods` | Bearer | `{ id: uuid, mood: low|flat|okay|good|bright, loggedAt, note? }` → `201`; a replay of the same `id` → `200`, no duplicate |
 | PATCH | `/api/moods/:id` | Bearer | `{ mood }` — corrects the caller's own check-in |
+| GET | `/api/me` | Bearer | The caller's profile: `accountMode` (`null` until chosen), `waterGoalGlasses` |
+| PUT | `/api/me` | Bearer | `{ accountMode?: independent|organization, waterGoalGlasses?: 1–20 }` — at least one field |
 
 Errors are always JSON: `{ "error": "message", "details"?: [{ field, message }] }`.
 Requests under `/api` are rate limited (100 per 15 min per IP by default) and bodies are capped at 16 KB.

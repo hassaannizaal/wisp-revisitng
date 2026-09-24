@@ -5,7 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/crisis/domain/crisis.dart';
 import '../../features/moods/domain/mood.dart';
+import '../../features/profile/domain/profile.dart';
+import '../../features/water/domain/water_day.dart';
 import '../../features/wisps/domain/wisp.dart';
 import '../config/app_config.dart';
 
@@ -92,6 +95,49 @@ class ApiClient {
         .map((item) => MoodLog.fromJson(item as Map<String, dynamic>))
         .toList(growable: false);
   }
+
+  // ---- Profile (docs/screens/03-account-mode.md) ----------------------------
+
+  Future<Profile> fetchProfile() async {
+    final json = await _send('GET', '/me');
+    return Profile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  Future<Profile> updateProfile({AccountMode? accountMode, int? waterGoalGlasses}) async {
+    final json = await _send(
+      'PUT',
+      '/me',
+      body: {if (accountMode != null) 'accountMode': accountMode.value, 'waterGoalGlasses': ?waterGoalGlasses},
+    );
+    return Profile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  // ---- Water (docs/screens/07-water.md) ---------------------------------------
+
+  Future<WaterDay> putWater(WaterDay day) async {
+    final json = await _send('PUT', '/water', body: day.toRequest());
+    return WaterDay.fromJson(json['day'] as Map<String, dynamic>);
+  }
+
+  Future<List<WaterDay>> fetchWater({required DateTime from, required DateTime to}) async {
+    final json = await _send(
+      'GET',
+      '/water',
+      query: {'from': WaterDay.formatDate(from), 'to': WaterDay.formatDate(to)},
+    );
+    return (json['days'] as List<dynamic>)
+        .map((item) => WaterDay.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  // ---- Crisis (docs/screens/04-home.md) ---------------------------------------
+
+  Future<CrisisLine> fetchCrisisLine() async {
+    final json = await _send('GET', '/crisis');
+    return CrisisLine.fromJson(json['line'] as Map<String, dynamic>);
+  }
+
+  Future<void> postCrisisEvent(CrisisEvent event) => _send('POST', '/crisis/events', body: event.toRequest());
 
   Future<Map<String, dynamic>> _send(
     String method,

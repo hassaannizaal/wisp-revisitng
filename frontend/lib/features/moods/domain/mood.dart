@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/storage/local_first_repository.dart';
+
 /// Five named states, never a number (design rule 6). Declaration order runs
 /// low → bright so the neutral option sits in the middle of any list.
 enum Mood {
@@ -21,22 +23,10 @@ enum Mood {
   static Mood fromValue(String value) => Mood.values.firstWhere((m) => m.name == value);
 }
 
-/// Whether the server has this exact version of a log yet.
-enum SyncState {
-  /// Server has it, and it matches.
-  synced,
-
-  /// Written on the device, never sent — needs `POST`.
-  pendingCreate,
-
-  /// Exists on the server, but the mood was changed since — needs `PATCH`.
-  pendingUpdate,
-}
-
 /// One check-in. Created on the device with its own id so it can be written
 /// before the network is involved and replayed safely.
 @immutable
-class MoodLog {
+class MoodLog implements Syncable {
   const MoodLog({required this.id, required this.mood, required this.loggedAt, this.sync = SyncState.synced});
 
   /// Parses both the server shape and the local shape (which adds `sync`).
@@ -47,11 +37,13 @@ class MoodLog {
     sync: SyncState.values.byName(json['sync'] as String? ?? SyncState.synced.name),
   );
 
+  @override
   final String id;
   final Mood mood;
 
   /// When the user says it happened (local time).
   final DateTime loggedAt;
+  @override
   final SyncState sync;
 
   bool get isSynced => sync == SyncState.synced;
@@ -59,6 +51,7 @@ class MoodLog {
   MoodLog copyWith({Mood? mood, SyncState? sync}) =>
       MoodLog(id: id, mood: mood ?? this.mood, loggedAt: loggedAt, sync: sync ?? this.sync);
 
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'mood': mood.value,

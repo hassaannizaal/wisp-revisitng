@@ -7,6 +7,7 @@ const { createLogger } = require('./logger');
 const { initFirebase } = require('./firebase');
 const { createWispsRepository } = require('./wisps/repository');
 const { createMoodsRepository } = require('./moods/repository');
+const { createUsersRepository } = require('./users/repository');
 const { createApp } = require('./app');
 
 const config = loadConfig();
@@ -19,6 +20,7 @@ try {
     auth,
     wisps: createWispsRepository(db),
     moods: createMoodsRepository(db),
+    users: createUsersRepository(db),
     logger,
     config,
   });

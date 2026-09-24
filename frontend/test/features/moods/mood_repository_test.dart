@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:wisp_mental_health/core/services/api_client.dart';
+import 'package:wisp_mental_health/core/storage/local_first_repository.dart';
 import 'package:wisp_mental_health/core/storage/local_store.dart';
 import 'package:wisp_mental_health/features/auth/domain/app_user.dart';
 import 'package:wisp_mental_health/features/moods/data/mood_repository.dart';
