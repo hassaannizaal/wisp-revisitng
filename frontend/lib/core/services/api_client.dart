@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
-import '../../src/features/auth/data/auth_repository.dart';
-import '../../src/features/moods/domain/mood.dart';
-import '../../src/features/wisps/domain/wisp.dart';
+import '../../features/auth/data/auth_repository.dart';
+import '../../features/moods/domain/mood.dart';
+import '../../features/wisps/domain/wisp.dart';
 import '../config/app_config.dart';
 
 /// Raised for any failed call to the WISP API. [message] is always safe to show

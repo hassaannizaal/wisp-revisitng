@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_metrics.dart';
-import '../../../../../core/widgets/breathing_orb.dart';
-import '../../../../../core/widgets/wordmark.dart';
+import '../../../../core/theme/app_metrics.dart';
+import '../../../../core/widgets/breathing_orb.dart';
+import '../../../../core/widgets/wordmark.dart';
 
 /// Shown only while the session is being restored. The router moves on the
 /// moment Firebase reports whether a user is signed in (see app_router.dart);

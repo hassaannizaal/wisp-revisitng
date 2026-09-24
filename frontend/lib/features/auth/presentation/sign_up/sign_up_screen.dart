@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/routing/app_routes.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_metrics.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../../../../core/widgets/app_buttons.dart';
-import '../../../../../core/widgets/labeled_text_field.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_metrics.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_buttons.dart';
+import '../../../../core/widgets/labeled_text_field.dart';
 import '../auth_copy.dart';
 import '../auth_scaffold.dart';
 import '../validators.dart';

@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/services/api_client.dart';
-import '../../../../core/storage/local_store.dart';
+import '../../../core/services/api_client.dart';
+import '../../../core/storage/local_store.dart';
 import '../../auth/data/firebase_auth_repository.dart';
 import '../domain/mood.dart';
 

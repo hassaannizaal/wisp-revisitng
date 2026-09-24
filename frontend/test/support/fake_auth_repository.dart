@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:wisp_mental_health/src/features/auth/data/auth_repository.dart';
-import 'package:wisp_mental_health/src/features/auth/domain/app_user.dart';
+import 'package:wisp_mental_health/features/auth/data/auth_repository.dart';
+import 'package:wisp_mental_health/features/auth/domain/app_user.dart';
 
 /// In-memory [AuthRepository] for tests: no Firebase, fully deterministic.
 class FakeAuthRepository implements AuthRepository {

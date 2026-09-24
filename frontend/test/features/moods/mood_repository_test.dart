@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:wisp_mental_health/core/services/api_client.dart';
 import 'package:wisp_mental_health/core/storage/local_store.dart';
-import 'package:wisp_mental_health/src/features/auth/domain/app_user.dart';
-import 'package:wisp_mental_health/src/features/moods/data/mood_repository.dart';
-import 'package:wisp_mental_health/src/features/moods/domain/mood.dart';
+import 'package:wisp_mental_health/features/auth/domain/app_user.dart';
+import 'package:wisp_mental_health/features/moods/data/mood_repository.dart';
+import 'package:wisp_mental_health/features/moods/domain/mood.dart';
 
 import '../../support/fake_auth_repository.dart';
 

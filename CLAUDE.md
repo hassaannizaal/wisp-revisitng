@@ -108,10 +108,13 @@ frontend/lib/
   core/theme/       tokens — colours, type, spacing, motion (do not bypass)
   core/routing/     go_router
   core/services/    api_client
-  src/features/<feature>/
+  core/storage/     local store + local-first sync base
+  core/widgets/     shared widgets (mode badge, buttons, orb)
+  features/<feature>/
     data/           repositories
     domain/         models
     presentation/   screens + Riverpod controllers
+frontend/test/      mirrors lib/ (core/, features/), fakes in support/
 backend/src/
   <feature>/        router.js, schema.js (zod), repository.js
   middleware/       auth.js verifies the Firebase ID token

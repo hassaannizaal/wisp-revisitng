@@ -1,4 +1,4 @@
-import '../../../../core/error/failures.dart';
+import '../../../core/error/failures.dart';
 
 /// Where an auth error is shown: under a field, or as a toast when it is not
 /// about any one field. Copy follows docs/screens/02-sign-in.md — it names

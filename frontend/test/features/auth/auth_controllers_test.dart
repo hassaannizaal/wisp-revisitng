@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wisp_mental_health/core/error/failures.dart';
-import 'package:wisp_mental_health/src/features/auth/data/auth_repository.dart';
-import 'package:wisp_mental_health/src/features/auth/presentation/sign_in/sign_in_controller.dart';
-import 'package:wisp_mental_health/src/features/auth/presentation/sign_up/sign_up_controller.dart';
+import 'package:wisp_mental_health/features/auth/data/auth_repository.dart';
+import 'package:wisp_mental_health/features/auth/presentation/sign_in/sign_in_controller.dart';
+import 'package:wisp_mental_health/features/auth/presentation/sign_up/sign_up_controller.dart';
 
 import '../../support/fake_auth_repository.dart';
 

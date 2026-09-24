@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wisp_mental_health/core/error/failures.dart';
-import 'package:wisp_mental_health/src/features/auth/presentation/auth_copy.dart';
+import 'package:wisp_mental_health/features/auth/presentation/auth_copy.dart';
 
 void main() {
   group('AuthCopy.placeSignInError', () {

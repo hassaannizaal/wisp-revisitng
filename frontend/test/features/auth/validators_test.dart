@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wisp_mental_health/src/features/auth/presentation/validators.dart';
+import 'package:wisp_mental_health/features/auth/presentation/validators.dart';
 
 void main() {
   group('validateEmail', () {

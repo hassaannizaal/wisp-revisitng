@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_metrics.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_buttons.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_metrics.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_buttons.dart';
 
 /// Shared frame for the sign-in and sign-up screens: a 44px back chevron,
 /// then a single scrolling column with `Space.lg` side padding.

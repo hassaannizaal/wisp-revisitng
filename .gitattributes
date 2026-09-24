@@ -1,0 +1,18 @@
+# Normalise line endings: LF in the repo and in every checkout, so Windows
+# and CI (Linux) see identical files and `dart format` / eslint agree.
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets: never diff or convert.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.jar binary

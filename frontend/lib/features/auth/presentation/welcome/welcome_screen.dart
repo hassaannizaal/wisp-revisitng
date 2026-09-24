@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/routing/app_routes.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_metrics.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../../../../core/widgets/app_buttons.dart';
-import '../../../../../core/widgets/breathing_orb.dart';
-import '../../../../../core/widgets/wash_background.dart';
-import '../../../../../core/widgets/wordmark.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_metrics.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_buttons.dart';
+import '../../../../core/widgets/breathing_orb.dart';
+import '../../../../core/widgets/wash_background.dart';
+import '../../../../core/widgets/wordmark.dart';
 
 /// Spec: docs/screens/01-welcome.md
 class WelcomeScreen extends StatelessWidget {

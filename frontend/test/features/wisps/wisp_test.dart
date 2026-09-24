@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wisp_mental_health/src/features/wisps/domain/wisp.dart';
+import 'package:wisp_mental_health/features/wisps/domain/wisp.dart';
 
 void main() {
   group('Wisp', () {

@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:wisp_mental_health/core/services/api_client.dart';
-import 'package:wisp_mental_health/src/features/auth/domain/app_user.dart';
-import 'package:wisp_mental_health/src/features/home/presentation/home_controller.dart';
+import 'package:wisp_mental_health/features/auth/domain/app_user.dart';
+import 'package:wisp_mental_health/features/home/presentation/home_controller.dart';
 
 import '../../support/fake_auth_repository.dart';
 
